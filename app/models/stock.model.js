@@ -1,20 +1,20 @@
 module.exports = (sequelize, Sequelize) => {
     const Stock = sequelize.define("stock", {
-        // ProductID: {
-        //     type: Sequelize.BOOLEAN
-        // },
+        productId: {
+            type: Sequelize.INTEGER
+        },
         quantity: {
             type: Sequelize.INTEGER
         },
-        // category: {
-        //     type: Sequelize.INTEGER
-        // },
-        // userid: {
-        //     type: Sequelize.INTEGER
-        // },
-        // subcategory: {
-        //     type: Sequelize.INTEGER
-        // },
+        categoryId: {
+            type: Sequelize.INTEGER
+        },
+        userId: {
+            type: Sequelize.INTEGER
+        },
+        subcategoryId: {
+            type: Sequelize.INTEGER
+        },
         measuredUnit: {
             type: Sequelize.STRING
         },

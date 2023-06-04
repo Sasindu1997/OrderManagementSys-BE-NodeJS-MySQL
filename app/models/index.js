@@ -21,20 +21,37 @@ db.sequelize = sequelize;
 
 db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
 db.orders = require("./order.model.js")(sequelize, Sequelize);
-db.categories = require("./category.model.js")(sequelize, Sequelize);
 db.customers = require("./customer.model.js")(sequelize, Sequelize);
 db.products = require("./product.model.js")(sequelize, Sequelize);
 db.rowMatterials = require("./rawMatterial.model.js")(sequelize, Sequelize);
 db.stocks = require("./stock.model.js")(sequelize, Sequelize);
 db.users = require("./user.model.js")(sequelize, Sequelize);
 db.subCategories = require("./subCategory.model.js")(sequelize, Sequelize);
+db.categories = require("./category.model.js")(sequelize, Sequelize);
 
-db.categories.hasMany(db.subCategories, { as: 'category', foreignKey: 'categoryId' });
-db.subCategories.belongsTo(db.categories, { foreignKey: 'categoryId' });
 
-db.products.hasMany(db.orders, { as: 'products', foreignKey: 'productId' });
-db.users.hasMany(db.orders, { as: 'user', foreignKey: 'userId' });
-db.customers.hasMany(db.orders, { as: 'customer', foreignKey: 'customerId' });
-// db.products.belongsTo(db.orders, { as: 'products', foreignKey: 'productId' });
+db.products.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
+db.users.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
+db.customers.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
+db.orders.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
+db.orders.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
+db.orders.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
+
+db.categories.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
+db.stocks.belongsTo(db.categories, { foreignKey: 'stockId', targetKey: 'id' });
+db.products.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
+db.stocks.belongsTo(db.products, { foreignKey: 'stockId', targetKey: 'id' });
+db.users.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
+db.stocks.belongsTo(db.users, { foreignKey: 'stockId', targetKey: 'id' });
+db.subCategories.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
+db.stocks.belongsTo(db.subCategories, { foreignKey: 'stockId', targetKey: 'id' });
+
+db.subCategories.hasMany(db.products, { foreignKey: 'productId', targetKey: 'id' });
+db.products.belongsTo(db.subCategories, { foreignKey: 'productId', targetKey: 'id' });
+db.categories.hasMany(db.products, { foreignKey: 'productId', targetKey: 'id' });
+db.products.belongsTo(db.categories, { foreignKey: 'productId', targetKey: 'id' });
+
+db.categories.hasMany(db.subCategories, { foreignKey: 'categoryId', targetKey: 'id' });
+db.subCategories.belongsTo(db.categories, { foreignKey: 'categoryId', targetKey: 'id' });
 
 module.exports = db;

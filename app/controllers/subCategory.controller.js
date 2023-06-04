@@ -17,7 +17,8 @@ exports.create = (req, res) => {
         title: req.body.title,
         code: req.body.title,
         description: req.body.description,
-        published: req.body.published ? req.body.published : false
+        categoryId: req.body.categoryId,
+        isActive: req.body.isActive ? req.body.isActive : false
     };
 
     // Save SubCategories in the database

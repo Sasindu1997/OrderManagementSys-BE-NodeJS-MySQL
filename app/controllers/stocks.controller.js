@@ -16,9 +16,9 @@ exports.create = (req, res) => {
     const stock = {
         productId: req.body.productId,
         quantity: req.body.quantity,
-        category: req.body.category,
-        userId: req.body.userid,
-        subcategory: req.body.subcategory,
+        categoryId: req.body.categoryId,
+        userId: req.body.userId,
+        subcategoryId: req.body.subcategoryId,
         measuredUnit: req.body.measuredUnit,
         minimumQuantity: req.body.minimumQuantity,
         maximumQuantity: req.body.maximumQuantity,

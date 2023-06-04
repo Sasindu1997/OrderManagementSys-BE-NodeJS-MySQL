@@ -3,11 +3,14 @@ module.exports = (sequelize, Sequelize) => {
         productName: {
             type: Sequelize.STRING
         },
+        productCode: {
+            type: Sequelize.STRING
+        },
         description: {
             type: Sequelize.STRING
         },
         price: {
-            type: Sequelize.STRING
+            type: Sequelize.FLOAT
         },
         sku: {
             type: Sequelize.STRING
@@ -18,15 +21,12 @@ module.exports = (sequelize, Sequelize) => {
         type: {
             type: Sequelize.STRING
         },
-        // quantity: {
-        //     type: Sequelize.STRING
-        // },
-        // category: {
-        //     type: Sequelize.STRING
-        // },
-        // subCategory: {
-        //     type: Sequelize.STRING
-        // },
+        categoryId: {
+            type: Sequelize.INTEGER
+        },
+        subCategoryId: {
+            type: Sequelize.INTEGER
+        },
         brand: {
             type: Sequelize.STRING
         },

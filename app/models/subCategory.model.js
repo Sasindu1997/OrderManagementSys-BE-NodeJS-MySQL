@@ -13,7 +13,11 @@ module.exports = (sequelize, Sequelize) => {
         },
         isActive: {
             type: Sequelize.BOOLEAN
-        }
+        },
+        categoryId: {
+            type: Sequelize.INTEGER
+        },
+
     });
 
     return SubCategory;

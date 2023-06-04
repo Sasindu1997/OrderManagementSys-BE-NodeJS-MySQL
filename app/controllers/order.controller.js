@@ -25,7 +25,7 @@ exports.create = (req, res) => {
         paymentMethod: req.body.paymentMethod,
         shippingMethod: req.body.shippingMethod,
         trackingNumber: req.body.trackingNumber,
-        productId: req.body.products,
+        productId: req.body.productId,
         customerId: req.body.customerId,
         userId: req.body.userId,
         isActive: req.body.isActive ? req.body.isActive : false,

@@ -1,25 +1,29 @@
 module.exports = (sequelize, Sequelize) => {
     const Order = sequelize.define("order", {
-        // customerID: {
-        //     type: Sequelize.STRING
-        // },
-        // userID: {
-        //     type: Sequelize.STRING
-        // },
+        customerId: {
+            type: Sequelize.INTEGER
+        },
+        userId: {
+            type: Sequelize.INTEGER
+        },
+        productId: {
+            type: Sequelize.JSON,
+            defaultValue: [],
+        },
         barcode: {
             type: Sequelize.STRING
         },
         weight: {
-            type: Sequelize.STRING
+            type: Sequelize.FLOAT
         },
         itemCount: {
-            type: Sequelize.STRING
+            type: Sequelize.INTEGER
         },
         paid: {
             type: Sequelize.BOOLEAN
         },
         total: {
-            type: Sequelize.STRING
+            type: Sequelize.FLOAT
         },
         status: {
             type: Sequelize.STRING

@@ -13,7 +13,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING
         },
         unitPrice: {
-            type: Sequelize.STRING
+            type: Sequelize.FLOAT
         },
         minStockLevel: {
             type: Sequelize.STRING
@@ -25,13 +25,13 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING
         },
         itemCount: {
-            type: Sequelize.STRING
+            type: Sequelize.INTEGER
         },
         paid: {
             type: Sequelize.BOOLEAN
         },
         total: {
-            type: Sequelize.STRING
+            type: Sequelize.FLOAT
         },
         status: {
             type: Sequelize.STRING

@@ -29,6 +29,7 @@ isActive
 //product
 productName
 description
+productCode
 price
 sku
 quantity

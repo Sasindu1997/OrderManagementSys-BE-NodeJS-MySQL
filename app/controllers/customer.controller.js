@@ -37,7 +37,7 @@ exports.create = (req, res) => {
 // Retrieve all Customers from the database.
 exports.findAll = (req, res) => {
     const fullName = req.query.fullName;
-    var condition = title ? {
+    var condition = fullName ? {
         fullName: {
             [Op.like]: `%${fullName}%`
         }
