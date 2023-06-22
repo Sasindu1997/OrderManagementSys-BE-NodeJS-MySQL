@@ -28,6 +28,7 @@ db.stocks = require("./stock.model.js")(sequelize, Sequelize);
 db.users = require("./user.model.js")(sequelize, Sequelize);
 db.subCategories = require("./subCategory.model.js")(sequelize, Sequelize);
 db.categories = require("./category.model.js")(sequelize, Sequelize);
+db.expenses = require("./expenses.model.js")(sequelize, Sequelize);
 
 
 db.products.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });

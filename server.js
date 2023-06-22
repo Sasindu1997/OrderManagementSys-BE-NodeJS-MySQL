@@ -3,6 +3,8 @@ const cors = require("cors");
 
 const app = express();
 
+global.__basedir = __dirname;
+
 var corsOptions = {
     origin: "http://localhost:8081"
 };
@@ -50,6 +52,8 @@ require("./app/routes/rawMatterial.routes")(app);
 require("./app/routes/stock.routes")(app);
 require("./app/routes/subCategory.routes")(app);
 require("./app/routes/user.routes")(app);
+require("./app/routes/expenses.routes")(app);
+require("./app/routes/upload.routes")(app);
 
 
 // set port, listen for requests
