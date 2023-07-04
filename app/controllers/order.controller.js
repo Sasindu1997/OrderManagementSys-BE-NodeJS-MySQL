@@ -1,6 +1,9 @@
 const db = require("../models");
 const Order = db.orders;
 const Op = db.Sequelize.Op;
+const Products = db.products;
+const Customers = db.customers;
+const Users = db.users;
 
 // Create and Save a new Order
 exports.create = (req, res) => {
@@ -53,7 +56,47 @@ exports.findAll = (req, res) => {
     } : null;
 
     Order.findAll({ where: condition })
-        .then(data => {
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productDetails = []
+                    for (let j = 0; j < element.dataValues.productId.length; j++) {
+                        console.log("****************************")
+                        await Products.findByPk(element.dataValues.productId[j]).then(dt => {
+                            element.dataValues.productDetails.push({
+                                pId: element.dataValues.productId[j],
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type
+                            })
+                        })
+                    }
+
+                    await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        element.dataValues.cfullName = dt.dataValues.fullName,
+                            element.dataValues.cemail = dt.dataValues.email,
+                            element.dataValues.cphone = dt.dataValues.phone,
+                            element.dataValues.caddress = dt.dataValues.address,
+                            element.dataValues.cdistrict = dt.dataValues.district
+
+                    })
+                    await Users.findByPk(element.dataValues.userId).then(dt => {
+                        element.dataValues.ufullName = dt.dataValues.fullName,
+                            element.dataValues.uemail = dt.dataValues.email,
+                            element.dataValues.urole = dt.dataValues.role,
+                            element.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
+                            element.dataValues.uaddress = dt.dataValues.address
+                    })
+                }
+            }
+            await addData();
             res.send(data);
         })
         .catch(err => {
@@ -68,8 +111,42 @@ exports.findOne = (req, res) => {
     const id = req.params.id;
 
     Order.findByPk(id)
-        .then(data => {
+        .then(async data => {
             if (data) {
+                if (data) {
+                    data.dataValues.productDetails = []
+                    for (let j = 0; j < data.dataValues.productId.length; j++) {
+                        await Products.findByPk(data.dataValues.productId[j]).then(dt => {
+                            data.dataValues.productDetails.push({
+                                pId: data.dataValues.productId[j],
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type
+                            })
+                        })
+                    }
+                    await Customers.findByPk(data.dataValues.customerId).then(dt => {
+                        data.dataValues.cfullName = dt.dataValues.fullName,
+                            data.dataValues.cemail = dt.dataValues.email,
+                            data.dataValues.cphone = dt.dataValues.phone,
+                            data.dataValues.caddress = dt.dataValues.address,
+                            data.dataValues.cdistrict = dt.dataValues.district
+
+                    })
+                    await Users.findByPk(data.dataValues.userId).then(dt => {
+                        data.dataValues.ufullName = dt.dataValues.fullName,
+                            data.dataValues.uemail = dt.dataValues.email,
+                            data.dataValues.urole = dt.dataValues.role,
+                            data.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
+                            data.dataValues.uaddress = dt.dataValues.address
+                    })
+                }
                 res.send(data);
             } else {
                 res.status(404).send({

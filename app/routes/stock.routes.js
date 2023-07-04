@@ -3,25 +3,28 @@ module.exports = app => {
 
     var router = require("express").Router();
 
-    // Create a new Tutorial
+    // Create a new Stock
     router.post("/", stocks.create);
 
-    // Retrieve all Tutorials
+    // Retrieve all Stocks
     router.get("/", stocks.findAll);
 
-    // Retrieve all published Tutorials
+    // Retrieve all published Stocks
     router.get("/published", stocks.findAllPublished);
 
-    // Retrieve a single Tutorial with id
+    // Retrieve a single Stock with id
     router.get("/:id", stocks.findOne);
 
-    // // Update a Tutorial with id
+    // Retrieve a Stock with product id
+    router.get("/byproduct/:id", stocks.findByProductId);
+
+    // // Update a Stock with id
     router.put("/:id", stocks.update);
 
-    // // Delete a Tutorial with id
+    // // Delete a Stock with id
     router.delete("/:id", stocks.delete);
 
-    // Delete all Tutorials
+    // Delete all Stocks
     router.delete("/", stocks.deleteAll);
 
     app.use('/api/stocks', router);

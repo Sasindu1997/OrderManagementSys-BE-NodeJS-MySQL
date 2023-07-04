@@ -1,6 +1,8 @@
 const db = require("../models");
 const SubCategories = db.subCategories;
+const Categories = db.categories;
 const Op = db.Sequelize.Op;
+const categories = require("./category.controller");
 
 // Create and Save a new SubCategories
 exports.create = (req, res) => {
@@ -43,7 +45,16 @@ exports.findAll = (req, res) => {
     } : null;
 
     SubCategories.findAll({ where: condition })
-        .then(data => {
+        .then(async(data) => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+                        element.dataValues.categoryTitle = dt.dataValues.title
+                    })
+                }
+            }
+            await addData();
             res.send(data);
         })
         .catch(err => {
@@ -58,8 +69,12 @@ exports.findOne = (req, res) => {
     const id = req.params.id;
 
     SubCategories.findByPk(id)
-        .then(data => {
+        .then(async data => {
             if (data) {
+                console.log("data", data.dataValues.categoryId)
+                await Categories.findByPk(data.dataValues.categoryId).then(dt => {
+                    data.dataValues.categoryTitle = dt.dataValues.title
+                })
                 res.send(data);
             } else {
                 res.status(404).send({
@@ -142,7 +157,7 @@ exports.deleteAll = (req, res) => {
 
 // Find all published SubCategoriess
 exports.findAllPublished = (req, res) => {
-    SubCategories.findAll({ where: { published: true } })
+    SubCategories.findAll({ where: { isActive: true } })
         .then(data => {
             res.send(data);
         })

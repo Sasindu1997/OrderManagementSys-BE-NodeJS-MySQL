@@ -1,6 +1,10 @@
 const db = require("../models");
 const Stock = db.stocks;
 const Op = db.Sequelize.Op;
+const Products = db.products;
+const Categories = db.categories;
+const SubCategories = db.subCategories;
+const Users = db.users;
 
 // Create and Save a new Stock
 exports.create = (req, res) => {
@@ -28,7 +32,7 @@ exports.create = (req, res) => {
 
     // Save Stock in the database
     Stock.create(stock)
-        .then(data => {
+        .then(async data => {
             res.send(data);
         })
         .catch(err => {
@@ -48,7 +52,40 @@ exports.findAll = (req, res) => {
     } : null;
 
     Stock.findAll({ where: condition })
-        .then(data => {
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    await Products.findByPk(element.dataValues.productId).then(dt => {
+                        element.dataValues.pName = dt.dataValues.productName,
+                            element.dataValues.pCode = dt.dataValues.productCode,
+                            element.dataValues.pdescription = dt.dataValues.description,
+                            element.dataValues.pprice = dt.dataValues.price,
+                            element.dataValues.pcategoryId = dt.dataValues.categoryId,
+                            element.dataValues.psubCategoryId = dt.dataValues.subCategoryId,
+                            element.dataValues.pbrand = dt.dataValues.brand,
+                            element.dataValues.pvolume = dt.dataValues.volume,
+                            element.dataValues.ptype = dt.dataValues.type
+                    })
+                    await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+                        element.dataValues.ctitle = dt.dataValues.title
+                        element.dataValues.cdescription = dt.dataValues.description
+                    })
+                    await Users.findByPk(element.dataValues.userId).then(dt => {
+                        console.log(dt.dataValues)
+                        element.dataValues.ufullName = dt.dataValues.fullName,
+                            element.dataValues.uemail = dt.dataValues.email,
+                            element.dataValues.urole = dt.dataValues.role,
+                            element.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
+                            element.dataValues.uaddress = dt.dataValues.address
+                    })
+                    await SubCategories.findByPk(element.dataValues.subcategoryId).then(dt => {
+                        element.dataValues.sctitle = dt.dataValues.title
+                        element.dataValues.scdescription = dt.dataValues.description
+                    })
+                }
+            }
+            await addData();
             res.send(data);
         })
         .catch(err => {
@@ -61,8 +98,54 @@ exports.findAll = (req, res) => {
 // Find a single Stock with an id
 exports.findOne = (req, res) => {
     const id = req.params.id;
-
     Stock.findByPk(id)
+        .then(async data => {
+            if (data) {
+                await Products.findByPk(data.dataValues.productId).then(dt => {
+                    data.dataValues.pName = dt.dataValues.productName,
+                        data.dataValues.pCode = dt.dataValues.productCode,
+                        data.dataValues.pdescription = dt.dataValues.description,
+                        data.dataValues.pprice = dt.dataValues.price,
+                        data.dataValues.pcategoryId = dt.dataValues.categoryId,
+                        data.dataValues.psubCategoryId = dt.dataValues.subCategoryId,
+                        data.dataValues.pbrand = dt.dataValues.brand,
+                        data.dataValues.pvolume = dt.dataValues.volume,
+                        data.dataValues.ptype = dt.dataValues.type
+                })
+                await Categories.findByPk(data.dataValues.categoryId).then(dt => {
+                    data.dataValues.ctitle = dt.dataValues.title
+                    data.dataValues.cdescription = dt.dataValues.description
+                })
+                await Users.findByPk(data.dataValues.userId).then(dt => {
+                    console.log(dt.dataValues)
+                    data.dataValues.ufullName = dt.dataValues.fullName,
+                        data.dataValues.uemail = dt.dataValues.email,
+                        data.dataValues.urole = dt.dataValues.role,
+                        data.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
+                        data.dataValues.uaddress = dt.dataValues.address
+                })
+                await SubCategories.findByPk(data.dataValues.subcategoryId).then(dt => {
+                    data.dataValues.sctitle = dt.dataValues.title
+                    data.dataValues.scdescription = dt.dataValues.description
+                })
+                res.send(data);
+            } else {
+                res.status(404).send({
+                    message: `Cannot find Stock with id=${id}.`
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: "Error retrieving Stock with id=" + id
+            });
+        });
+};
+
+exports.findByProductId = (req, res) => {
+    const id = req.params.id;
+
+    Stock.findAll({ where: { productId: id } })
         .then(data => {
             if (data) {
                 res.send(data);

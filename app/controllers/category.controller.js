@@ -53,6 +53,7 @@ exports.findAll = (req, res) => {
 
 // Find a single Category with an id
 exports.findOne = (req, res) => {
+    console.log("req", req.params.id, res.send)
     const id = req.params.id;
 
     Category.findByPk(id)
@@ -66,9 +67,12 @@ exports.findOne = (req, res) => {
             }
         })
         .catch(err => {
-            res.status(500).send({
-                message: "Error retrieving Category with id=" + id
-            });
+            console.log("err", err)
+            console.log("res", res)
+
+            // res.status(500).send({
+            //     message: "Error retrieving Category with id=" + id
+            // });
         });
 };
 
