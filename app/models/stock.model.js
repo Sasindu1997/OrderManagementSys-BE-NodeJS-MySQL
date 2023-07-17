@@ -27,6 +27,9 @@ module.exports = (sequelize, Sequelize) => {
         reorderPoint: {
             type: Sequelize.STRING
         },
+        stockType: {
+            type: Sequelize.STRING
+        },
         isActive: {
             type: Sequelize.BOOLEAN
         },

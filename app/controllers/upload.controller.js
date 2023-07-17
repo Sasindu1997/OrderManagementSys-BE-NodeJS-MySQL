@@ -24,6 +24,7 @@ const upload = async(req, res) => {
                 throw error.message;
             })
             .on("data", (row) => {
+                console.log(row)
                 tutorials.push(row);
             })
             .on("end", () => {

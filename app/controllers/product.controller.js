@@ -1,6 +1,8 @@
 const db = require("../models");
 const Product = db.products;
 const Op = db.Sequelize.Op;
+const SubCategories = db.subCategories;
+const Categories = db.categories;
 
 // Create and Save a new Product
 exports.create = (req, res) => {
@@ -53,7 +55,19 @@ exports.findAll = (req, res) => {
     } : null;
 
     Product.findAll({ where: condition })
-        .then(data => {
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+                        element.dataValues.categoryTitle = dt.dataValues.title
+                    })
+                    await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
+                        dt ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
+                    })
+                }
+            }
+            await addData();
             res.send(data);
         })
         .catch(err => {
@@ -68,8 +82,15 @@ exports.findOne = (req, res) => {
     const id = req.params.id;
 
     Product.findByPk(id)
-        .then(data => {
+        .then(async data => {
             if (data) {
+                await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+                    dt ? element.dataValues.categoryTitle = dt.dataValues.title : element.dataValues.categoryTitle = ""
+                })
+                await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
+                    dt ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
+                })
+                res.send(data);
                 res.send(data);
             } else {
                 res.status(404).send({
