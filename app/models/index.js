@@ -30,6 +30,7 @@ db.subCategories = require("./subCategory.model.js")(sequelize, Sequelize);
 db.categories = require("./category.model.js")(sequelize, Sequelize);
 db.expenses = require("./expenses.model.js")(sequelize, Sequelize);
 db.chemicals = require("./chemicals.model.js")(sequelize, Sequelize);
+db.deliveryOptions = require("./deliveryOptions.mode.js")(sequelize, Sequelize);
 
 db.products.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.users.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });

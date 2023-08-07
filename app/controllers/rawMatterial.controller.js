@@ -5,7 +5,7 @@ const Op = db.Sequelize.Op;
 // Create and Save a new RowMatterial
 exports.create = (req, res) => {
     // Validate request
-    if (!req.body.name, !req.body.total) {
+    if (!req.body.name, !req.body.unitPrice) {
         res.status(400).send({
             message: "Content can not be empty!"
         });

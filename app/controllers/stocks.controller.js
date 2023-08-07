@@ -2,6 +2,8 @@ const db = require("../models");
 const Stock = db.stocks;
 const Op = db.Sequelize.Op;
 const Products = db.products;
+const Chemicals = db.chemicals;
+const RowMatterials = db.rowMatterials;
 const Categories = db.categories;
 const SubCategories = db.subCategories;
 const Users = db.users;
@@ -21,6 +23,7 @@ exports.create = (req, res) => {
         productId: req.body.productId,
         quantity: req.body.quantity,
         categoryId: req.body.categoryId,
+        stockType: req.body.stockType,
         userId: req.body.userId,
         subcategoryId: req.body.subcategoryId,
         measuredUnit: req.body.measuredUnit,
@@ -33,6 +36,59 @@ exports.create = (req, res) => {
     // Save Stock in the database
     Stock.create(stock)
         .then(async data => {
+            console.log("ttt", req.body.stockType)
+            if (req.body.stockType === 'chem') {
+                await Chemicals.findByPk(req.body.productId)
+                    .then(async data => {
+                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
+                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
+
+                        const queryString = `UPDATE chemicals SET chemicals.maxStockLevel='${newQty}' WHERE chemicals.id = '${req.body.productId}';`
+
+                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
+                            .then(r => console.log("rrrrrrrr", r))
+                            .catch((err) => {
+                                throw err;
+                            });
+                    })
+                    .catch(err => {
+                        throw err;
+                    });
+            } else if (req.body.stockType === 'raw') {
+                RowMatterials.findByPk(req.body.productId)
+                    .then(async data => {
+                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
+                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
+
+                        const queryString = `UPDATE rawmats SET rawmats.maxStockLevel='${newQty}' WHERE rawmats.id = '${req.body.productId}';`
+
+                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
+                            .then(r => console.log("rrrrrrrr", r))
+                            .catch((err) => {
+                                throw err;
+                            });
+                    })
+                    .catch(err => {
+                        throw err;
+                    });
+            } else if (req.body.stockType === 'prod') {
+                Products.findByPk(req.body.productId)
+                    .then(async data => {
+                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
+                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
+
+                        const queryString = `UPDATE products SET products.maxStockLevel='${newQty}' WHERE products.id = '${req.body.productId}';`
+
+                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
+                            .then(r => console.log("rrrrrrrr", r))
+                            .catch((err) => {
+                                throw err;
+                            });
+                    })
+                    .catch(err => {
+                        throw err;
+                    });
+            }
             res.send(data);
         })
         .catch(err => {

@@ -17,7 +17,6 @@ exports.create = (req, res) => {
 
     // Create a Order
     const order = {
-        userID: req.body.userID,
         barcode: req.body.barcode,
         weight: req.body.weight,
         itemCount: req.body.itemCount,
@@ -46,6 +45,40 @@ exports.create = (req, res) => {
         });
 };
 
+exports.createByBE = (newOrder, send) => {
+    // Validate request
+
+    // Create a Order
+    // const order = {
+    //     userID: req.body.userID,
+    //     barcode: req.body.barcode,
+    //     weight: req.body.weight,
+    //     itemCount: req.body.itemCount,
+    //     paid: req.body.paid ? req.body.paid : false,
+    //     total: req.body.total,
+    //     status: req.body.status,
+    //     shippingAddress: req.body.shippingAddress,
+    //     paymentMethod: req.body.paymentMethod,
+    //     shippingMethod: req.body.shippingMethod,
+    //     trackingNumber: req.body.trackingNumber,
+    //     productId: req.body.productId,
+    //     customerId: req.body.customerId,
+    //     userId: req.body.userId,
+    //     isActive: req.body.isActive ? req.body.isActive : false,
+    // };
+
+    // Save Order in the database
+    Order.create(newOrder)
+        .then(data => {
+            send(data);
+        })
+        .catch(err => {
+            send({
+                message: err.message || "Some error occurred while creating the Order."
+            });
+        });
+};
+
 // Retrieve all Orders from the database.
 exports.findAll = (req, res) => {
     const customerId = req.query.customerId;
@@ -64,7 +97,8 @@ exports.findAll = (req, res) => {
                     for (let j = 0; j < element.dataValues.productId.length; j++) {
                         console.log("****************************")
                         await Products.findByPk(element.dataValues.productId[j]).then(dt => {
-                            element.dataValues.productDetails.push({
+
+                            dt && dt.dataValues && element.dataValues.productDetails.push({
                                 pId: element.dataValues.productId[j],
                                 pName: dt.dataValues.productName,
                                 pCode: dt.dataValues.productCode,
@@ -161,6 +195,19 @@ exports.findOne = (req, res) => {
         });
 };
 
+exports.searchBy = (req, res) => {
+    console.log(req.params)
+    const searchSelect = req.params.searchSelect;
+    const searchvalue = req.params.searchvalue;
+    const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}';`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(r => res.send(r))
+        .catch((err) => {
+            throw err;
+        });
+};
+
 // Update a Order by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
@@ -234,6 +281,158 @@ exports.findAllPublished = (req, res) => {
             res.send(data);
         })
         .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.todayOrderCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE DATE(createdAt) = CURDATE();`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.thisMonthOrderCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE MONTH(createdAt) = MONTH(CURRENT_DATE())
+    AND YEAR(createdAt) = YEAR(CURRENT_DATE());`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.weeklyOrderCount = (req, res) => {
+    const queryString = `SELECT 
+    DAYNAME(createdAt) AS day_of_week,
+    COUNT(*) AS order_count
+    FROM 
+        orders
+    WHERE 
+        createdAt >= CURDATE() - INTERVAL (DAYOFWEEK(CURDATE()) - 1) DAY
+        AND createdAt < CURDATE() + INTERVAL (7 - DAYOFWEEK(CURDATE())) DAY
+    GROUP BY 
+        day_of_week
+    ORDER BY 
+        MIN(createdAt);`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.monthlyOrderCount = (req, res) => {
+    const queryString = `SELECT 
+    DATE_FORMAT(createdAt, '%M') AS month_name,
+    COUNT(*) AS order_count
+    FROM 
+        orders
+    WHERE 
+        YEAR(createdAt) = YEAR(CURDATE())
+    GROUP BY 
+        month_name
+    ORDER BY 
+        MIN(createdAt);`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.yearlyOrderCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE YEAR(createdAt) = YEAR(CURRENT_DATE());`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.getAllProductOrders = (req, res) => {
+    const queryString = `
+    SELECT 
+       p.id, p.productName, p.productCode, p.maxStockLevel, p.price, COUNT(o.productId) AS sold_count
+    FROM 
+        orders o, products p
+    WHERE 
+        o.productId LIKE CONCAT('%[', p.id, ']%') OR
+        o.productId LIKE CONCAT('%[', p.id, ',%') OR
+        o.productId LIKE CONCAT('%,', p.id, ']%') OR
+        o.productId LIKE CONCAT('%, ', p.id, ']%') OR
+        o.productId LIKE CONCAT('%,', p.id, ',%') 
+        
+    group by p.id;`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.newCustomersCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfCustomers FROM customers WHERE DATE(createdAt) = CURDATE();`
+
+    Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.updateStocks = (id, count, req, res) => {
+    const queryString = `UPDATE orderman.products
+                        SET products.maxStockLevel = products.maxStockLevel - '${count}'
+                        WHERE products.id = '${id}';`
+
+    Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+            res.send(data);
+        })
+        .catch((err) => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving orders."
             });

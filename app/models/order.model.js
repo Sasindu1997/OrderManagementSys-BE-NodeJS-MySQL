@@ -40,6 +40,9 @@ module.exports = (sequelize, Sequelize) => {
         trackingNumber: {
             type: Sequelize.STRING
         },
+        exchange: {
+            type: Sequelize.BOOLEAN
+        },
         isActive: {
             type: Sequelize.BOOLEAN
         },

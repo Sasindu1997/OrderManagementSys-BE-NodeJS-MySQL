@@ -34,6 +34,24 @@ exports.create = (req, res) => {
         });
 };
 
+exports.createByBE = (req, send) => {
+    // Validate request
+
+    // Create a Customer
+    const customer = req;
+
+    // Save Customer in the database
+    Customer.create(customer)
+        .then(data => {
+            send(data);
+        })
+        .catch(err => {
+            send({
+                message: err.message || "Some error occurred while creating the Customer."
+            });
+        });
+};
+
 // Retrieve all Customers from the database.
 exports.findAll = (req, res) => {
     const fullName = req.query.fullName;
@@ -51,6 +69,17 @@ exports.findAll = (req, res) => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving customers."
             });
+        });
+};
+
+exports.findByMobileNo = (mobile, res) => {
+
+    const queryString = `SELECT * FROM customers where customers.phone LIKE '%${mobile}';`
+
+    Customer.sequelize.query(queryString, { type: Customer.sequelize.QueryTypes.SELECT })
+        .then(r => res(r))
+        .catch((err) => {
+            throw err;
         });
 };
 

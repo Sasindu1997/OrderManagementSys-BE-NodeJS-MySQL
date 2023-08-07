@@ -33,6 +33,12 @@ module.exports = (sequelize, Sequelize) => {
         imageURL: {
             type: Sequelize.STRING
         },
+        minStockLevel: {
+            type: Sequelize.STRING
+        },
+        maxStockLevel: {
+            type: Sequelize.STRING
+        },
         isActive: {
             type: Sequelize.BOOLEAN
         },

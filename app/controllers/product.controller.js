@@ -30,6 +30,8 @@ exports.create = (req, res) => {
         subCategory: req.body.subCategory,
         brand: req.body.brand,
         imageURL: req.body.imageURL,
+        minStockLevel: req.body.minStockLevel,
+        maxStockLevel: req.body.maxStockLevel,
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
@@ -77,6 +79,36 @@ exports.findAll = (req, res) => {
         });
 };
 
+exports.findAllByNameByBE = (productName, send) => {
+    var condition = productName ? {
+        productName: {
+            [Op.like]: `%${productName}%`
+        }
+    } : null;
+
+    Product.findAll({ where: condition })
+        .then(async data => {
+            // async function addData() {
+            //     for (let index = 0; index < data.length; index++) {
+            //         const element = data[index];
+            //         await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+            //             element.dataValues.categoryTitle = dt.dataValues.title
+            //         })
+            //         await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
+            //             dt ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
+            //         })
+            //     }
+            // }
+            // await addData();
+            send(data);
+        })
+        .catch(err => {
+            send({
+                message: err.message || "Some error occurred while retrieving products."
+            });
+        });
+};
+
 // Find a single Product with an id
 exports.findOne = (req, res) => {
     const id = req.params.id;
@@ -84,13 +116,17 @@ exports.findOne = (req, res) => {
     Product.findByPk(id)
         .then(async data => {
             if (data) {
-                await Categories.findByPk(element.dataValues.categoryId).then(dt => {
-                    dt ? element.dataValues.categoryTitle = dt.dataValues.title : element.dataValues.categoryTitle = ""
+                console.log(data.dataValues)
+                await Categories.findByPk(data.dataValues.categoryId).then(dt => {
+                    console.log("dtq", data.dataValues);
+
+                    dt ? data.dataValues.categoryTitle = dt.dataValues.title : data.dataValues.categoryTitle = ""
                 })
-                await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
-                    dt ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
+                await SubCategories.findByPk(data.dataValues.subCategoryId).then(dt => {
+                    console.log("dt2", data.dataValues);
+
+                    dt ? data.dataValues.subCategoryTitle = dt.dataValues.title : data.dataValues.subCategoryTitle = ""
                 })
-                res.send(data);
                 res.send(data);
             } else {
                 res.status(404).send({
