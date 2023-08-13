@@ -1,8 +1,8 @@
 const db = require("../models");
-const Expense = db.expenses;
+const UtilityExpenses = db.utilityExpenses;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new Expense
+// Create and Save a new UtilityExpenses
 exports.create = (req, res) => {
     // Validate request
     if (!req.body.name || !req.body.amount) {
@@ -12,7 +12,7 @@ exports.create = (req, res) => {
         return;
     }
 
-    // Create a Expense
+    // Create a UtilityExpenses
     const expense = {
         name: req.body.name,
         description: req.body.description,
@@ -20,19 +20,19 @@ exports.create = (req, res) => {
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
-    // Save Expense in the database
-    Expense.create(expense)
+    // Save UtilityExpenses in the database
+    UtilityExpenses.create(expense)
         .then(data => {
             res.send(data);
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while creating the Expense."
+                message: err.message || "Some error occurred while creating the UtilityExpenses."
             });
         });
 };
 
-// Retrieve all Expenses from the database.
+// Retrieve all UtilityExpensess from the database.
 exports.findAll = (req, res) => {
     const name = req.query.name;
     var condition = name ? {
@@ -41,7 +41,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Expense.findAll({ where: condition })
+    UtilityExpenses.findAll({ where: condition })
         .then(data => {
             res.send(data);
         })
@@ -52,100 +52,85 @@ exports.findAll = (req, res) => {
         });
 };
 
-exports.findAllThisMonth = (req, res) => {
-    const queryString = `SELECT * FROM expenses WHERE MONTH(createdAt) = MONTH(CURDATE());`
-
-    Expense.sequelize.query(queryString, { type: Expense.sequelize.QueryTypes.SELECT })
-        .then(data => {
-            console.log(data)
-            res.send(data);
-        })
-        .catch((err) => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving orders."
-            });
-        });
-};
-
-// Find a single Expense with an id
+// Find a single UtilityExpenses with an id
 exports.findOne = (req, res) => {
     const id = req.params.id;
 
-    Expense.findByPk(id)
+    UtilityExpenses.findByPk(id)
         .then(data => {
             if (data) {
                 res.send(data);
             } else {
                 res.status(404).send({
-                    message: `Cannot find Expense with id=${id}.`
+                    message: `Cannot find UtilityExpenses with id=${id}.`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error retrieving Expense with id=" + id
+                message: "Error retrieving UtilityExpenses with id=" + id
             });
         });
 };
 
-// Update a Expense by the id in the request
+// Update a UtilityExpenses by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
 
-    Expense.update(req.body, {
+    UtilityExpenses.update(req.body, {
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Expense was updated successfully."
+                    message: "UtilityExpenses was updated successfully."
                 });
             } else {
                 res.send({
-                    message: `Cannot update Expense with id=${id}. Maybe Expense was not found or req.body is empty!`
+                    message: `Cannot update UtilityExpenses with id=${id}. Maybe UtilityExpenses was not found or req.body is empty!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error updating Expense with id=" + id
+                message: "Error updating UtilityExpenses with id=" + id
             });
         });
 };
 
-// Delete a Expense with the specified id in the request
+// Delete a UtilityExpenses with the specified id in the request
 exports.delete = (req, res) => {
     const id = req.params.id;
 
-    Expense.destroy({
+    UtilityExpenses.destroy({
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Expense was deleted successfully!"
+                    message: "UtilityExpenses was deleted successfully!"
                 });
             } else {
                 res.send({
-                    message: `Cannot delete Expense with id=${id}. Maybe Expense was not found!`
+                    message: `Cannot delete UtilityExpenses with id=${id}. Maybe UtilityExpenses was not found!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Could not delete Expense with id=" + id
+                message: "Could not delete UtilityExpenses with id=" + id
             });
         });
 };
 
-// Delete all Expenses from the database.
+// Delete all UtilityExpensess from the database.
 exports.deleteAll = (req, res) => {
-    Expense.destroy({
+    UtilityExpenses.destroy({
             where: {},
             truncate: false
         })
         .then(nums => {
-            res.send({ message: `${nums} Expenses were deleted successfully!` });
+            res.send({ message: `${nums} UtilityExpensess were deleted successfully!` });
         })
         .catch(err => {
             res.status(500).send({
@@ -154,9 +139,9 @@ exports.deleteAll = (req, res) => {
         });
 };
 
-// Find all published Expenses
+// Find all published UtilityExpensess
 exports.findAllPublished = (req, res) => {
-    Expense.findAll({ where: { published: true } })
+    UtilityExpenses.findAll({ where: { published: true } })
         .then(data => {
             res.send(data);
         })

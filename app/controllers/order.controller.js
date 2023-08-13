@@ -113,20 +113,20 @@ exports.findAll = (req, res) => {
                         })
                     }
 
-                    await Customers.findByPk(element.dataValues.customerId).then(dt => {
-                        element.dataValues.cfullName = dt.dataValues.fullName,
-                            element.dataValues.cemail = dt.dataValues.email,
-                            element.dataValues.cphone = dt.dataValues.phone,
-                            element.dataValues.caddress = dt.dataValues.address,
-                            element.dataValues.cdistrict = dt.dataValues.district
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = ''
 
                     })
-                    await Users.findByPk(element.dataValues.userId).then(dt => {
-                        element.dataValues.ufullName = dt.dataValues.fullName,
-                            element.dataValues.uemail = dt.dataValues.email,
-                            element.dataValues.urole = dt.dataValues.role,
-                            element.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
-                            element.dataValues.uaddress = dt.dataValues.address
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
                     })
                 }
             }
@@ -165,20 +165,20 @@ exports.findOne = (req, res) => {
                             })
                         })
                     }
-                    await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        data.dataValues.cfullName = dt.dataValues.fullName,
-                            data.dataValues.cemail = dt.dataValues.email,
-                            data.dataValues.cphone = dt.dataValues.phone,
-                            data.dataValues.caddress = dt.dataValues.address,
-                            data.dataValues.cdistrict = dt.dataValues.district
+                    data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
+                            dt && dt.dataValues ? data.dataValues.cphone = dt.dataValues.phone : data.dataValues.cphone = '',
+                            dt && dt.dataValues ? data.dataValues.caddress = dt.dataValues.address : data.dataValues.caddress = '',
+                            dt && dt.dataValues ? data.dataValues.cdistrict = dt.dataValues.district : data.dataValues.cdistrict = ''
 
                     })
-                    await Users.findByPk(data.dataValues.userId).then(dt => {
-                        data.dataValues.ufullName = dt.dataValues.fullName,
-                            data.dataValues.uemail = dt.dataValues.email,
-                            data.dataValues.urole = dt.dataValues.role,
-                            data.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
-                            data.dataValues.uaddress = dt.dataValues.address
+                    data && data.dataValues && await Users.findByPk(data.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? data.dataValues.ufullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.uemail = dt.dataValues.email : data.dataValues.uemail = '',
+                            dt && dt.dataValues ? data.dataValues.urole = dt.dataValues.role : data.dataValues.urole = '',
+                            dt && dt.dataValues ? data.dataValues.uphoneNumber = dt.dataValues.phoneNumber : data.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? data.dataValues.uaddress = dt.dataValues.address : data.dataValues.uaddress = ''
                     })
                 }
                 res.send(data);

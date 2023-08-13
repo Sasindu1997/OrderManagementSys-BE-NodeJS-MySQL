@@ -57,6 +57,8 @@ require("./app/routes/upload.routes")(app);
 require("./app/routes/chemicals.routes")(app);
 require("./app/routes/dashboard.routes")(app);
 require("./app/routes/delivery.routes")(app);
+require("./app/routes/income.routes")(app);
+require("./app/routes/utilityExpenses.routes")(app);
 
 
 // set port, listen for requests

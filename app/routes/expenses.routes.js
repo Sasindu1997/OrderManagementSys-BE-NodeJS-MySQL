@@ -9,6 +9,8 @@ module.exports = app => {
     // Retrieve all Tutorials
     router.get("/", expenses.findAll);
 
+    router.get("/thisMonth", expenses.findAllThisMonth);
+
     // Retrieve all published Tutorials
     router.get("/published", expenses.findAllPublished);
 

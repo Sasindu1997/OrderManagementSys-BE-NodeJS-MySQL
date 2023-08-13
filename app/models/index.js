@@ -29,6 +29,8 @@ db.users = require("./user.model.js")(sequelize, Sequelize);
 db.subCategories = require("./subCategory.model.js")(sequelize, Sequelize);
 db.categories = require("./category.model.js")(sequelize, Sequelize);
 db.expenses = require("./expenses.model.js")(sequelize, Sequelize);
+db.utilityExpenses = require("./utilityExpenses.model.js")(sequelize, Sequelize);
+db.income = require("./income.model.js")(sequelize, Sequelize);
 db.chemicals = require("./chemicals.model.js")(sequelize, Sequelize);
 db.deliveryOptions = require("./deliveryOptions.mode.js")(sequelize, Sequelize);
 
