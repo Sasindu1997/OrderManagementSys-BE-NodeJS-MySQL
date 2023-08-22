@@ -39,7 +39,7 @@ db.sequelize.sync()
 
 // simple route
 app.get("/", (req, res) => {
-    res.json({ message: "Welcome to bezkoder application." });
+    res.json({ message: "Welcome to Zenode application." });
 });
 
 //routes
@@ -59,6 +59,7 @@ require("./app/routes/dashboard.routes")(app);
 require("./app/routes/delivery.routes")(app);
 require("./app/routes/income.routes")(app);
 require("./app/routes/utilityExpenses.routes")(app);
+require("./app/routes/fardar.routes")(app);
 
 
 // set port, listen for requests

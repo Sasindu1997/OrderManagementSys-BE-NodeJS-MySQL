@@ -36,60 +36,60 @@ exports.create = (req, res) => {
     // Save Stock in the database
     Stock.create(stock)
         .then(async data => {
-            console.log("ttt", req.body.stockType)
             if (req.body.stockType === 'chem') {
-                await Chemicals.findByPk(req.body.productId)
-                    .then(async data => {
-                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
-                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
-
-                        const queryString = `UPDATE chemicals SET chemicals.maxStockLevel='${newQty}' WHERE chemicals.id = '${req.body.productId}';`
-
-                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
-                            .then(r => console.log("rrrrrrrr", r))
-                            .catch((err) => {
-                                throw err;
-                            });
-                    })
-                    .catch(err => {
+                let newQty = req.body.quantity;
+                const queryString1 = `UPDATE chemicals SET chemicals.maxStockLevel =  chemicals.maxStockLevel + '${newQty}' WHERE chemicals.id = '${req.body.productId}';`
+                newQty && Chemicals.sequelize.query(queryString1, { type: Chemicals.sequelize.QueryTypes.UPDATE })
+                    .then(res.send(data))
+                    .catch((err) => {
                         throw err;
                     });
             } else if (req.body.stockType === 'raw') {
-                RowMatterials.findByPk(req.body.productId)
-                    .then(async data => {
-                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
-                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
+                let newQty = req.body.quantity;
+                const queryString2 = `UPDATE rawmats SET rawmats.maxStockLevel =  rawmats.maxStockLevel + '${newQty}' WHERE rawmats.id = '${req.body.productId}';`
 
-                        const queryString = `UPDATE rawmats SET rawmats.maxStockLevel='${newQty}' WHERE rawmats.id = '${req.body.productId}';`
-
-                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
-                            .then(r => console.log("rrrrrrrr", r))
-                            .catch((err) => {
-                                throw err;
-                            });
-                    })
-                    .catch(err => {
+                newQty && RowMatterials.sequelize.query(queryString2, { type: RowMatterials.sequelize.QueryTypes.UPDATE })
+                    .then(res.send(data))
+                    .catch((err) => {
                         throw err;
                     });
             } else if (req.body.stockType === 'prod') {
-                Products.findByPk(req.body.productId)
-                    .then(async data => {
-                        let newQty = parseInt(data.dataValues.maxStockLevel) + req.body.quantity;
-                        console.log("3333333333333", parseInt(data.dataValues.maxStockLevel) + req.body.quantity)
+                if (req.body.productId) {
+                    let newQty = req.body.quantity;
+                    const queryString3 = `UPDATE products SET products.maxStockLevel =  products.maxStockLevel + '${newQty}' WHERE products.id = '${req.body.productId}';`
 
-                        const queryString = `UPDATE products SET products.maxStockLevel='${newQty}' WHERE products.id = '${req.body.productId}';`
+                    Products.sequelize.query(queryString3, { type: Products.sequelize.QueryTypes.UPDATE })
+                        .then()
+                        .catch((err) => {
+                            throw err;
+                        });
 
-                        newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
-                            .then(r => console.log("rrrrrrrr", r))
-                            .catch((err) => {
-                                throw err;
-                            });
+                    req.body.chemicaldata.map(item => {
+                        if (item.initValue != '' || item.initValue != undefined || item.initValue != null || item.initValue != 'null') {
+                            const queryString = `UPDATE chemicals SET chemicals.maxStockLevel = chemicals.maxStockLevel-'${item.initValue}' WHERE chemicals.id = '${item.id}';`
+
+                            newQty && Chemicals.sequelize.query(queryString, { type: Chemicals.sequelize.QueryTypes.UPDATE })
+                                .then()
+                                .catch((err) => {
+                                    throw err;
+                                });
+                        }
                     })
-                    .catch(err => {
-                        throw err;
-                    });
+                    req.body.rawMattdata.map(item => {
+                        if (item.initValue != '' || item.initValue != undefined || item.initValue != null || item.initValue != 'null') {
+                            const queryString = `UPDATE rawmats SET rawmats.maxStockLevel = rawmats.maxStockLevel-'${item.initValue}' WHERE rawmats.id = '${item.id}';`
+
+                            newQty && RowMatterials.sequelize.query(queryString, { type: RowMatterials.sequelize.QueryTypes.UPDATE })
+                                .then()
+                                .catch((err) => {
+                                    throw err;
+                                });
+                        }
+                    })
+                }
+                console.log("datadatadata", data)
+                res.send(data);
             }
-            res.send(data);
         })
         .catch(err => {
             res.status(500).send({
@@ -157,33 +157,33 @@ exports.findOne = (req, res) => {
     Stock.findByPk(id)
         .then(async data => {
             if (data) {
-                await Products.findByPk(data.dataValues.productId).then(dt => {
-                    data.dataValues.pName = dt.dataValues.productName,
-                        data.dataValues.pCode = dt.dataValues.productCode,
-                        data.dataValues.pdescription = dt.dataValues.description,
-                        data.dataValues.pprice = dt.dataValues.price,
-                        data.dataValues.pcategoryId = dt.dataValues.categoryId,
-                        data.dataValues.psubCategoryId = dt.dataValues.subCategoryId,
-                        data.dataValues.pbrand = dt.dataValues.brand,
-                        data.dataValues.pvolume = dt.dataValues.volume,
-                        data.dataValues.ptype = dt.dataValues.type
-                })
-                await Categories.findByPk(data.dataValues.categoryId).then(dt => {
-                    data.dataValues.ctitle = dt.dataValues.title
-                    data.dataValues.cdescription = dt.dataValues.description
-                })
-                await Users.findByPk(data.dataValues.userId).then(dt => {
-                    console.log(dt.dataValues)
-                    data.dataValues.ufullName = dt.dataValues.fullName,
-                        data.dataValues.uemail = dt.dataValues.email,
-                        data.dataValues.urole = dt.dataValues.role,
-                        data.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
-                        data.dataValues.uaddress = dt.dataValues.address
-                })
-                await SubCategories.findByPk(data.dataValues.subcategoryId).then(dt => {
-                    data.dataValues.sctitle = dt.dataValues.title
-                    data.dataValues.scdescription = dt.dataValues.description
-                })
+                // await Products.findByPk(data.dataValues.productId).then(dt => {
+                //     data.dataValues.pName = dt.dataValues.productName,
+                //         data.dataValues.pCode = dt.dataValues.productCode,
+                //         data.dataValues.pdescription = dt.dataValues.description,
+                //         data.dataValues.pprice = dt.dataValues.price,
+                //         data.dataValues.pcategoryId = dt.dataValues.categoryId,
+                //         data.dataValues.psubCategoryId = dt.dataValues.subCategoryId,
+                //         data.dataValues.pbrand = dt.dataValues.brand,
+                //         data.dataValues.pvolume = dt.dataValues.volume,
+                //         data.dataValues.ptype = dt.dataValues.type
+                // })
+                // await Categories.findByPk(data.dataValues.categoryId).then(dt => {
+                //     data.dataValues.ctitle = dt.dataValues.title
+                //     data.dataValues.cdescription = dt.dataValues.description
+                // })
+                // await Users.findByPk(data.dataValues.userId).then(dt => {
+                //     console.log(dt.dataValues)
+                //     data.dataValues.ufullName = dt.dataValues.fullName,
+                //         data.dataValues.uemail = dt.dataValues.email,
+                //         data.dataValues.urole = dt.dataValues.role,
+                //         data.dataValues.uphoneNumber = dt.dataValues.phoneNumber,
+                //         data.dataValues.uaddress = dt.dataValues.address
+                // })
+                // await SubCategories.findByPk(data.dataValues.subcategoryId).then(dt => {
+                //     data.dataValues.sctitle = dt.dataValues.title
+                //     data.dataValues.scdescription = dt.dataValues.description
+                // })
                 res.send(data);
             } else {
                 res.status(404).send({
@@ -202,6 +202,26 @@ exports.findByProductId = (req, res) => {
     const id = req.params.id;
 
     Stock.findAll({ where: { productId: id } })
+        .then(data => {
+            if (data) {
+                res.send(data);
+            } else {
+                res.status(404).send({
+                    message: `Cannot find Stock with id=${id}.`
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: "Error retrieving Stock with id=" + id
+            });
+        });
+};
+
+exports.findByProductIdAndType = (req, res) => {
+    const id = req.params.id;
+    const type = req.params.type;
+    Stock.findAll({ where: { productId: id, stockType: type } })
         .then(data => {
             if (data) {
                 res.send(data);
@@ -246,7 +266,8 @@ exports.update = (req, res) => {
 // Delete a Stock with the specified id in the request
 exports.delete = (req, res) => {
     const id = req.params.id;
-
+    const type = req.params.type;
+    console.log(req.params.type)
     Stock.destroy({
             where: { id: id }
         })

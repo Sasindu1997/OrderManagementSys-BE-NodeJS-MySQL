@@ -30,8 +30,8 @@ exports.create = (req, res) => {
         subCategory: req.body.subCategory,
         brand: req.body.brand,
         imageURL: req.body.imageURL,
-        minStockLevel: req.body.minStockLevel,
-        maxStockLevel: req.body.maxStockLevel,
+        minStockLevel: req.body.minStockLevel ? req.body.minStockLevel : 0,
+        maxStockLevel: req.body.maxStockLevel ? req.body.maxStockLevel : 0,
         isActive: req.body.isActive ? req.body.isActive : false
     };
 

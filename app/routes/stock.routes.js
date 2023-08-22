@@ -18,11 +18,14 @@ module.exports = app => {
     // Retrieve a Stock with product id
     router.get("/byproduct/:id", stocks.findByProductId);
 
+    // Retrieve a Stock with product id and type
+    router.get("/byproduct/:type/:id", stocks.findByProductIdAndType);
+
     // // Update a Stock with id
     router.put("/:id", stocks.update);
 
     // // Delete a Stock with id
-    router.delete("/:id", stocks.delete);
+    router.delete("/:id/:type", stocks.delete);
 
     // Delete all Stocks
     router.delete("/", stocks.deleteAll);

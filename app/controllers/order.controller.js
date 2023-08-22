@@ -208,6 +208,16 @@ exports.searchBy = (req, res) => {
         });
 };
 
+exports.searchByCusPhone = (phn, res) => {
+    const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
+
+    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(r => res(r))
+        .catch((err) => {
+            res(err)
+        });
+};
+
 // Update a Order by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
@@ -430,10 +440,10 @@ exports.updateStocks = (id, count, req, res) => {
     Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
             console.log(data)
-            res.send(data);
+            res(data);
         })
         .catch((err) => {
-            res.status(500).send({
+            res({
                 message: err.message || "Some error occurred while retrieving orders."
             });
         });

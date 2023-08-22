@@ -9,6 +9,12 @@ module.exports = (sequelize, Sequelize) => {
         description: {
             type: Sequelize.STRING
         },
+        clientId: {
+            type: Sequelize.STRING
+        },
+        apiKey: {
+            type: Sequelize.STRING
+        },
         isActive: {
             type: Sequelize.BOOLEAN
         }

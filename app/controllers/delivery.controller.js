@@ -17,6 +17,8 @@ exports.create = (req, res) => {
         userName: req.body.userName,
         passWord: req.body.passWord,
         description: req.body.description,
+        clientId: req.body.clientId,
+        apiKey: req.body.apiKey,
         isActive: req.body.isActive ? req.body.isActive : true
     };
 
@@ -68,6 +70,26 @@ exports.findOne = (req, res) => {
         })
         .catch(err => {
             res.status(500).send({
+                message: "Error retrieving Delivery with id=" + id
+            });
+        });
+};
+
+exports.findOneBE = (req, res) => {
+    const id = req.params.id;
+
+    Delivery.findByPk(id)
+        .then(data => {
+            if (data) {
+                res(data);
+            } else {
+                res({
+                    message: `Cannot find Delivery with id=${id}.`
+                });
+            }
+        })
+        .catch(err => {
+            res({
                 message: "Error retrieving Delivery with id=" + id
             });
         });

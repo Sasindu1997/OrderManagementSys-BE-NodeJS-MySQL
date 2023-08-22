@@ -72,9 +72,29 @@ exports.findAll = (req, res) => {
         });
 };
 
+// Retrieve all Customers from the database.
+exports.findAllByPhone = (phone, res) => {
+    var condition = phone ? {
+        phone: {
+            [Op.like]: `%${phone}%`
+        }
+    } : null;
+
+    Customer.findAll({ where: condition })
+        .then(data => {
+            res(data);
+        })
+        .catch(err => {
+            res({
+                message: err.message || "Some error occurred while retrieving customers."
+            });
+        });
+};
+
+
 exports.findByMobileNo = (mobile, res) => {
 
-    const queryString = `SELECT * FROM customers where customers.phone LIKE '%${mobile}';`
+    const queryString = `SELECT * FROM customers where FIND_IN_SET('${mobile}', customers.phone);`
 
     Customer.sequelize.query(queryString, { type: Customer.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
