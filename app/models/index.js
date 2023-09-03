@@ -21,6 +21,7 @@ db.sequelize = sequelize;
 
 db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
 db.orders = require("./order.model.js")(sequelize, Sequelize);
+db.orderrs = require("./orderr.model.js")(sequelize, Sequelize);
 db.customers = require("./customer.model.js")(sequelize, Sequelize);
 db.products = require("./product.model.js")(sequelize, Sequelize);
 db.rowMatterials = require("./rawMatterial.model.js")(sequelize, Sequelize);
@@ -34,12 +35,20 @@ db.income = require("./income.model.js")(sequelize, Sequelize);
 db.chemicals = require("./chemicals.model.js")(sequelize, Sequelize);
 db.deliveryOptions = require("./deliveryOptions.mode.js")(sequelize, Sequelize);
 
+db.products.hasMany(db.orderrs, { foreignKey: 'orderId', targetKey: 'id' });
+db.users.hasMany(db.orderrs, { foreignKey: 'orderId', targetKey: 'id' });
+db.customers.hasMany(db.orderrs, { foreignKey: 'orderId', targetKey: 'id' });
+db.orderrs.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
+db.orderrs.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
+db.orderrs.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
+
 db.products.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.users.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.customers.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
+
 
 db.categories.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
 db.stocks.belongsTo(db.categories, { foreignKey: 'stockId', targetKey: 'id' });

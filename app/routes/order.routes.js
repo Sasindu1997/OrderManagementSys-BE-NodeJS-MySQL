@@ -1,5 +1,5 @@
 module.exports = app => {
-    const orders = require("../controllers/order.controller.js");
+    const orders = require("../controllers/orderr.controller.js");
 
     var router = require("express").Router();
 
@@ -14,6 +14,9 @@ module.exports = app => {
 
     // Retrieve a single Tutorial with id
     router.get("/:id", orders.findOne);
+
+    // Retrieve a single Tutorial with id
+    router.get("/barcode/:barcode", orders.findOneByBarcode);
 
     // // Update a Tutorial with id
     router.put("/:id", orders.update);

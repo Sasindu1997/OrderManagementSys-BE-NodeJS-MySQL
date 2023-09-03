@@ -10,6 +10,7 @@ const { DELIVERY_URL } = require("../config/env.config");
 
 const fs = require("fs");
 const csv = require("fast-csv");
+const axios = require("axios");
 
 function setCharAt(str, index, chr) {
     if (index > str.length - 1) return str;
@@ -418,26 +419,40 @@ const sendToDelivery = (req, res) => {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json;charset=UTF-8'
+            'Content-Type': '*/*',
+            'Host': '<calculated when request is sent>'
         },
         data: {
-            "client_id": req.client_id,
-            "api_key": req.api_key,
-            "recipient_name": req.recipient_name,
-            "recipient_contact_no": req.recipient_contact_no,
-            "recipient_address": req.recipient_address,
-            "recipient_city": req.recipient_city,
-            "parcel_type": req.parcel_type,
-            "parcel_description": req.parcel_description,
-            "cod_amount": req.cod_amount,
-            "order_id": req.order_id,
-            "exchange": req.exchange
+            "client_id": "9017",
+            "api_key": "api64b907eeba8e6",
+            "recipient_name": "customer 2",
+            "recipient_contact_no": "0778800000",
+            "recipient_address": "No.02, test lane, test district, test country",
+            "recipient_city": "test district",
+            "parcel_type": 1,
+            "parcel_description": "test test test",
+            "cod_amount": "11111111111",
+            "order_id": "45464565",
+            "exchange": 0
         }
+        // {
+        //     "client_id": req.client_id,
+        //     "api_key": req.api_key,
+        //     "recipient_name": req.recipient_name,
+        //     "recipient_contact_no": req.recipient_contact_no,
+        //     "recipient_address": req.recipient_address,
+        //     "recipient_city": req.recipient_city,
+        //     "parcel_type": req.parcel_type,
+        //     "parcel_description": req.parcel_description,
+        //     "cod_amount": req.cod_amount,
+        //     "order_id": req.order_id,
+        //     "exchange": req.exchange
+        // }
     };
 
     axios(options)
         .then(response => {
-            console.log(response.status);
+            console.log("eeeeeeeeeeeeeeeeeeeeeeeee", response);
         }).catch(error => {
             console.log(error);
         });

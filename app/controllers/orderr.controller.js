@@ -1,21 +1,87 @@
 const db = require("../models");
-const Order = db.orders;
+const Orderr = db.orderrs;
 const Op = db.Sequelize.Op;
 const Products = db.products;
 const Customers = db.customers;
 const Users = db.users;
+const delivery = require("../controllers/delivery.controller");
+const SMSController = require("../controllers/sms.controller");
+var store = require('store')
+const axios = require("axios");
 
-// Create and Save a new Order
-exports.create = (req, res) => {
-    // Validate request
-    if (!req.body.productId, !req.body.itemCount, !req.body.total) {
+const sendToDelivery = async(req, res) => {
+    console.log("**********************************************************************", req)
+    const options = {
+        url: 'http://fardardomestic.com/api/p_request_v1.02.php',
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': '*/*',
+            'Host': 'https://fardardomestic.com'
+        },
+        host: '<PROXY_HOST>',
+        port: '<PROXY_PORT>',
+        data: {
+            "client_id": req.client_id,
+            "api_key": req.api_key,
+            "recipient_name": req.recipient_name,
+            "recipient_contact_no": req.recipient_contact_no,
+            "recipient_address": req.recipient_address,
+            "recipient_city": req.recipient_city,
+            "parcel_type": req.parcel_type,
+            "parcel_description": req.parcel_description,
+            "cod_amount": req.cod_amount,
+            "order_id": req.order_id,
+            "exchange": req.exchange
+        }
+    };
+
+    await axios(options)
+        .then(response => {
+            console.log("---------------------------------------------", response);
+        }).catch(error => {
+            console.log(error);
+        });
+};
+
+// Create and Save a new Orderr
+exports.create = async(req, res) => {
+    let deliveryData = {};
+    let customerData = {}
+    const sendSMS = (mask, numbers) => {
+        console.log("numbers", mask, numbers)
+        const res = SMSController.login();
+        res.then(data => {
+            store.set('sms', { accessToken: `${data.data.accessToken}` })
+            const resSMS = SMSController.sendSMS(mask, numbers);
+            console.log("resSMS", resSMS)
+        })
+    }
+
+    console.log("req.body.orderId", req.body.orderId)
+
+    console.log(req.body)
+        // Validate request
+    if (!req.body.productDetails, !req.body.total, !req.body.customerId) {
         res.status(400).send({
             message: "Content can not be empty!"
         });
         return;
     }
+    if (req.body.isDeliveryAdded && req.body.deliveryId) {
+        const send = async(value) => {
+            deliveryData = value ? value.dataValues ? value.dataValues : {} : {};
+        }
+        let res = await delivery.findOneBE({ params: { id: req.body.deliveryId } }, send);
+    }
+    if (req.body.customerId) {
+        customerData = await Customers.findByPk(req.body.customerId);
+        console.log(customerData.dataValues, deliveryData)
+    }
+    // req.body.isDeliveryAdded
+    // req.body.deliveryId
 
-    // Create a Order
+    // Create a Orderr
     const order = {
         barcode: req.body.barcode,
         weight: req.body.weight,
@@ -31,25 +97,51 @@ exports.create = (req, res) => {
         productDetails: req.body.productDetails,
         customerId: req.body.customerId,
         userId: req.body.userId,
+        // orderId: req.body.orderId,
         isActive: req.body.isActive ? req.body.isActive : false,
     };
 
-    // Save Order in the database
-    Order.create(order)
+    // Save Orderr in the database
+    Orderr.create(order)
         .then(data => {
+            if (data) {
+                // Send SMS
+                sendSMS(deliveryData && deliveryData.description || "LA ROCHER", customerData && customerData.dataValues.phone)
+
+
+                // Send to Delivery
+                const sendResFrmsendToDelivery = async(value) => {
+                    console.log("sendResFrmsendToDelivery", value);
+                };
+
+                deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
+                    "client_id": deliveryData.clientId,
+                    "api_key": deliveryData.apiKey,
+                    "recipient_name": customerData.dataValues.fullName,
+                    "recipient_contact_no": customerData.dataValues.phone,
+                    "recipient_address": customerData.dataValues.address,
+                    "recipient_city": customerData.dataValues.district,
+                    "parcel_type": 1,
+                    "parcel_description": "test test test",
+                    "cod_amount": req.body.total,
+                    "order_id": req.body.orderId,
+                    "exchange": 0,
+                }, sendResFrmsendToDelivery)
+            }
             res.send(data);
+
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while creating the Order."
+                message: err.message || "Some error occurred while creating the Orderr."
             });
         });
 };
 
-exports.createByBE = (newOrder, send) => {
+exports.createByBE = (newOrderr, send) => {
     // Validate request
 
-    // Create a Order
+    // Create a Orderr
     // const order = {
     //     userID: req.body.userID,
     //     barcode: req.body.barcode,
@@ -68,19 +160,19 @@ exports.createByBE = (newOrder, send) => {
     //     isActive: req.body.isActive ? req.body.isActive : false,
     // };
 
-    // Save Order in the database
-    Order.create(newOrder)
+    // Save Orderr in the database
+    Orderr.create(newOrderr)
         .then(data => {
             send(data);
         })
         .catch(err => {
             send({
-                message: err.message || "Some error occurred while creating the Order."
+                message: err.message || "Some error occurred while creating the Orderr."
             });
         });
 };
 
-// Retrieve all Orders from the database.
+// Retrieve all Orderrs from the database.
 exports.findAll = (req, res) => {
     const customerId = req.query.customerId;
     var condition = customerId ? {
@@ -89,7 +181,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Order.findAll({ where: condition })
+    Orderr.findAll({ where: condition })
         .then(async data => {
             async function addData() {
                 for (let index = 0; index < data.length; index++) {
@@ -141,11 +233,11 @@ exports.findAll = (req, res) => {
         });
 };
 
-// Find a single Order with an id
+// Find a single Orderr with an id
 exports.findOne = (req, res) => {
     const id = req.params.id;
 
-    Order.findByPk(id)
+    Orderr.findByPk(id)
         .then(async data => {
             if (data) {
                 if (data) {
@@ -185,13 +277,13 @@ exports.findOne = (req, res) => {
                 res.send(data);
             } else {
                 res.status(404).send({
-                    message: `Cannot find Order with id=${id}.`
+                    message: `Cannot find Orderr with id=${id}.`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error retrieving Order with id=" + id
+                message: "Error retrieving Orderr with id=" + id
             });
         });
 };
@@ -203,7 +295,7 @@ exports.findOneByBarcode = (req, res) => {
         barcode: barcode
     } : null;
 
-    Order.findOne({ where: condition })
+    Orderr.findOne({ where: condition })
         .then(async data => {
             if (data) {
                 if (data) {
@@ -243,13 +335,13 @@ exports.findOneByBarcode = (req, res) => {
                 res.send(data);
             } else {
                 res.status(404).send({
-                    message: `Cannot find Order with barcode=${barcode}.`
+                    message: `Cannot find Orderr with barcode=${barcode}.`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error retrieving Order with barcode=" + barcode
+                message: "Error retrieving Orderr with barcode=" + barcode
             });
         });
 };
@@ -260,7 +352,7 @@ exports.searchBy = (req, res) => {
     const searchvalue = req.params.searchvalue;
     const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}';`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res.send(r))
         .catch((err) => {
             throw err;
@@ -270,71 +362,71 @@ exports.searchBy = (req, res) => {
 exports.searchByCusPhone = (phn, res) => {
     const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
         .catch((err) => {
             res(err)
         });
 };
 
-// Update a Order by the id in the request
+// Update a Orderr by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
 
-    Order.update(req.body, {
+    Orderr.update(req.body, {
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Order was updated successfully."
+                    message: "Orderr was updated successfully."
                 });
             } else {
                 res.send({
-                    message: `Cannot update Order with id=${id}. Maybe Order was not found or req.body is empty!`
+                    message: `Cannot update Orderr with id=${id}. Maybe Orderr was not found or req.body is empty!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error updating Order with id=" + id
+                message: "Error updating Orderr with id=" + id
             });
         });
 };
 
-// Delete a Order with the specified id in the request
+// Delete a Orderr with the specified id in the request
 exports.delete = (req, res) => {
     const id = req.params.id;
 
-    Order.destroy({
+    Orderr.destroy({
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Order was deleted successfully!"
+                    message: "Orderr was deleted successfully!"
                 });
             } else {
                 res.send({
-                    message: `Cannot delete Order with id=${id}. Maybe Order was not found!`
+                    message: `Cannot delete Orderr with id=${id}. Maybe Orderr was not found!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Could not delete Order with id=" + id
+                message: "Could not delete Orderr with id=" + id
             });
         });
 };
 
-// Delete all Orders from the database.
+// Delete all Orderrs from the database.
 exports.deleteAll = (req, res) => {
-    Order.destroy({
+    Orderr.destroy({
             where: {},
             truncate: false
         })
         .then(nums => {
-            res.send({ message: `${nums} Orders were deleted successfully!` });
+            res.send({ message: `${nums} Orderrs were deleted successfully!` });
         })
         .catch(err => {
             res.status(500).send({
@@ -343,9 +435,9 @@ exports.deleteAll = (req, res) => {
         });
 };
 
-// Find all published Orders
+// Find all published Orderrs
 exports.findAllPublished = (req, res) => {
-    Order.findAll({ where: { published: true } })
+    Orderr.findAll({ where: { published: true } })
         .then(data => {
             res.send(data);
         })
@@ -356,10 +448,10 @@ exports.findAllPublished = (req, res) => {
         });
 };
 
-exports.todayOrderCount = (req, res) => {
-    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE DATE(createdAt) = CURDATE();`
+exports.todayOrderrCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrderrs FROM orders WHERE DATE(createdAt) = CURDATE();`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             console.log(data)
             res.send(data);
@@ -371,11 +463,11 @@ exports.todayOrderCount = (req, res) => {
         });
 };
 
-exports.thisMonthOrderCount = (req, res) => {
-    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE MONTH(createdAt) = MONTH(CURRENT_DATE())
+exports.thisMonthOrderrCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrderrs FROM orders WHERE MONTH(createdAt) = MONTH(CURRENT_DATE())
     AND YEAR(createdAt) = YEAR(CURRENT_DATE());`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             res.send(data);
         })
@@ -386,7 +478,7 @@ exports.thisMonthOrderCount = (req, res) => {
         });
 };
 
-exports.weeklyOrderCount = (req, res) => {
+exports.weeklyOrderrCount = (req, res) => {
     const queryString = `SELECT 
     DAYNAME(createdAt) AS day_of_week,
     COUNT(*) AS order_count
@@ -400,7 +492,7 @@ exports.weeklyOrderCount = (req, res) => {
     ORDER BY 
         MIN(createdAt);`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             res.send(data);
         })
@@ -411,7 +503,7 @@ exports.weeklyOrderCount = (req, res) => {
         });
 };
 
-exports.monthlyOrderCount = (req, res) => {
+exports.monthlyOrderrCount = (req, res) => {
     const queryString = `SELECT 
     DATE_FORMAT(createdAt, '%M') AS month_name,
     COUNT(*) AS order_count
@@ -424,7 +516,7 @@ exports.monthlyOrderCount = (req, res) => {
     ORDER BY 
         MIN(createdAt);`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             res.send(data);
         })
@@ -435,10 +527,10 @@ exports.monthlyOrderCount = (req, res) => {
         });
 };
 
-exports.yearlyOrderCount = (req, res) => {
-    const queryString = `SELECT COUNT(id) AS NumberOfOrders FROM orders WHERE YEAR(createdAt) = YEAR(CURRENT_DATE());`
+exports.yearlyOrderrCount = (req, res) => {
+    const queryString = `SELECT COUNT(id) AS NumberOfOrderrs FROM orders WHERE YEAR(createdAt) = YEAR(CURRENT_DATE());`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             res.send(data);
         })
@@ -449,7 +541,7 @@ exports.yearlyOrderCount = (req, res) => {
         });
 };
 
-exports.getAllProductOrders = (req, res) => {
+exports.getAllProductOrderrs = (req, res) => {
     const queryString = `
     SELECT 
        p.id, p.productName, p.productCode, p.maxStockLevel, p.price, COUNT(o.productId) AS sold_count
@@ -464,7 +556,7 @@ exports.getAllProductOrders = (req, res) => {
         
     group by p.id;`
 
-    Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             console.log(data)
             res.send(data);
@@ -479,7 +571,7 @@ exports.getAllProductOrders = (req, res) => {
 exports.newCustomersCount = (req, res) => {
     const queryString = `SELECT COUNT(id) AS NumberOfCustomers FROM customers WHERE DATE(createdAt) = CURDATE();`
 
-    Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             console.log(data)
             res.send(data);
@@ -496,7 +588,7 @@ exports.updateStocks = (id, count, req, res) => {
                         SET products.maxStockLevel = products.maxStockLevel - '${count}'
                         WHERE products.id = '${id}';`
 
-    Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+    Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             console.log(data)
             res(data);

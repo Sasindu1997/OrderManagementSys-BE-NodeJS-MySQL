@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const Order = sequelize.define("order", {
+    const Orderr = sequelize.define("orderr", {
         customerId: {
             type: Sequelize.INTEGER
         },
@@ -52,5 +52,5 @@ module.exports = (sequelize, Sequelize) => {
         },
     });
 
-    return Order;
+    return Orderr;
 };

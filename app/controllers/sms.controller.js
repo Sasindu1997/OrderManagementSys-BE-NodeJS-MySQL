@@ -18,6 +18,7 @@ exports.login = async(req, res) => {
             'X-API-VERSION': 'v1'
         }
     });
+    console.log(data)
     return data
 };
 
