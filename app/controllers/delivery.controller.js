@@ -43,7 +43,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Delivery.findAll({ where: condition })
+    Delivery.findAll({ where: condition, order: Delivery.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

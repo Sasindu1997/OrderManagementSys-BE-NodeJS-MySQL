@@ -2,15 +2,16 @@ const db = require("../models");
 const Tutorial = db.tutorials;
 const customers = require("../controllers/customer.controller");
 const delivery = require("../controllers/delivery.controller");
-const order = require("../controllers/order.controller");
+const order = require("../controllers/orderr.controller");
 const product = require("../controllers/product.controller");
 const SMSController = require("../controllers/sms.controller");
 var store = require('store')
 const { DELIVERY_URL } = require("../config/env.config");
-
 const fs = require("fs");
 const csv = require("fast-csv");
 const axios = require("axios");
+const { AxiosRequestConfig } = require("axios");
+
 
 function setCharAt(str, index, chr) {
     if (index > str.length - 1) return str;
@@ -37,7 +38,6 @@ const uploadInit = async(req, res) => {
             return res.status(400).send("Please upload a CSV file!");
         }
 
-        let tutorials = [];
         console.log("***************************************************")
 
         console.log("__basedir", __basedir)
@@ -55,15 +55,14 @@ const uploadInit = async(req, res) => {
             })
             .on("data", async(row) => {
                 console.log(row)
-                tutorials.push(row);
-
-
 
                 // 1.0
                 //check multiple phone numbers
                 let customerPhone = row['Recipient Mobile'];
                 if (customerPhone.includes("/")) {
                     customerPhnArray = customerPhone.split("/");
+                } else if (customerPhone.includes(",")) {
+                    customerPhnArray = customerPhone.split(",");
                 } else {
                     customerPhnArray.push(customerPhone);
                 }
@@ -71,32 +70,86 @@ const uploadInit = async(req, res) => {
                 // 2.0
                 //Check previous customers
                 await customerPhnArray.map(async(number) => {
+                    console.log("customerPhone", number)
                     if (number.charAt(0) == '0') {
                         let newNO = '';
                         newNO = setCharAt(number, 0, '94')
                         customerNewPhnArray.push(newNO);
+                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
 
                         const send = async(value) => {
-                            console.log("Check previous customers", value);
-                            value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
+                                value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
 
-                            // 3.0
-                            //show previous orders
-                            const showPrevOrders = async() => {
-                                if (duplicatePhnArray.length > 0) {
-                                    const send2 = async(value) => {
-                                        console.log("Check previous orders", value);
-                                        return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
+                                // 3.0
+                                //show previous orders
+                                const showPrevOrders = async() => {
+                                    if (duplicatePhnArray.length > 0) {
+                                        const send2 = async(value) => {
+                                            console.log("Check previous orders", value);
+                                            return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
+                                        }
+
+                                        // 9488656396
+                                        await order.searchByCusPhone(newNO, send2)
                                     }
-
-                                    // 9488656396
-                                    await order.searchByCusPhone(newNO, send2)
                                 }
+                                showPrevOrders()
                             }
-                            showPrevOrders()
-                        }
+                            // 9488656396
+                        let res = await customers.findByMobileNo(newNO, send);
+                        console.log("res", res)
+                    } else if (number.charAt(0) == '9') {
+                        let newNO = '';
+                        newNO = number
+                        customerNewPhnArray.push(newNO);
+                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
 
-                        // 9488656396
+                        const send = async(value) => {
+                                value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
+
+                                // 3.0
+                                //show previous orders
+                                const showPrevOrders = async() => {
+                                    if (duplicatePhnArray.length > 0) {
+                                        const send2 = async(value) => {
+                                            console.log("Check previous orders", value);
+                                            return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
+                                        }
+
+                                        // 9488656396
+                                        await order.searchByCusPhone(newNO, send2)
+                                    }
+                                }
+                                showPrevOrders()
+                            }
+                            // 9488656396
+                        let res = await customers.findByMobileNo(newNO, send);
+                        console.log("res", res)
+                    } else if (number.charAt(0) == '7') {
+                        let newNO = '';
+                        newNO = setCharAt(number, 0, '947')
+                        customerNewPhnArray.push(newNO);
+                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
+
+                        const send = async(value) => {
+                                value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
+
+                                // 3.0
+                                //show previous orders
+                                const showPrevOrders = async() => {
+                                    if (duplicatePhnArray.length > 0) {
+                                        const send2 = async(value) => {
+                                            console.log("Check previous orders", value);
+                                            return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
+                                        }
+
+                                        // 9488656396
+                                        await order.searchByCusPhone(newNO, send2)
+                                    }
+                                }
+                                showPrevOrders()
+                            }
+                            // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
                         console.log("res", res)
                     }
@@ -174,7 +227,6 @@ const upload = async(req, res) => {
                 let duplicatePhnArray = [];
                 let productIdArrayFinal = [];
                 let productsArraystage1 = [];
-                let productArray = [];
                 let totalItemCount = 0;
                 let CUSID = '';
 
@@ -193,6 +245,36 @@ const upload = async(req, res) => {
                     if (customerPhnArray[i].charAt(0) == '0') {
                         let newNO = '';
                         newNO = setCharAt(customerPhnArray[i], 0, '94')
+                        customerNewPhnArray.push(newNO);
+
+                        const send = async(value) => {
+                            console.log("value", value);
+                            value.length > 0 ? duplicatePhnArray.push(value) : '';
+                            value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
+
+                        }
+
+                        // 9488656396
+                        let res = await customers.findByMobileNo(newNO, send);
+                        console.log("res", res)
+                    } else if (customerPhnArray[i].charAt(0) == '9') {
+                        let newNO = '';
+                        newNO = customerPhnArray[i]
+                        customerNewPhnArray.push(newNO);
+
+                        const send = async(value) => {
+                            console.log("value", value);
+                            value.length > 0 ? duplicatePhnArray.push(value) : '';
+                            value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
+
+                        }
+
+                        // 9488656396
+                        let res = await customers.findByMobileNo(newNO, send);
+                        console.log("res", res)
+                    } else if (customerPhnArray[i].charAt(0) == '7') {
+                        let newNO = '';
+                        newNO = setCharAt(customerPhnArray[i], 0, '947')
                         customerNewPhnArray.push(newNO);
 
                         const send = async(value) => {
@@ -232,14 +314,14 @@ const upload = async(req, res) => {
                 setTimeout(async function() {
                     console.log("item", duplicatePhnNumbersArray);
                     if (duplicatePhnNumbersArray.length > 0) {
-                        const sendResFrmCusphone = async(value) => {
-                            console.log("sendResFrmCusphone", value)
-                            CUSID = value.length > 0 && value[0].dataValues && value[0].dataValues.id;
+                        // const sendResFrmCusphone = async(value) => {
+                        //     console.log("sendResFrmCusphone", value)
+                        //     CUSID = value.length > 0 && value[0].dataValues && value[0].dataValues.id;
 
-                            //caling check PRODUCTS
-                            CUSID && checkProducts();
-                        };
-                        let resCus = await customers.findAllByPhone(duplicatePhnNumbersArray[0], sendResFrmCusphone);
+                        //     //caling check PRODUCTS
+                        //     CUSID && checkProducts();
+                        // };
+                        // let resCus = await customers.findAllByPhone(duplicatePhnNumbersArray[0], sendResFrmCusphone);
                     } else {
                         addNewCus();
                     }
@@ -285,19 +367,28 @@ const upload = async(req, res) => {
                     productsArraystage1 = productsString.split("/");
 
                     await productsArraystage1.map(async prstring => {
+                        let productArray = [];
+
                         let productsArraywithoutCount = [];
                         let productsArraywithoutWeight = [];
 
-                        productsArraywithoutCount = prstring.split(":");
+                        productsArraywithoutCount = prstring.split("-");
 
-                        productsArraywithoutWeight = productsArraywithoutCount[0].split("-");
+                        productsArraywithoutWeight = productsArraywithoutCount[0].split(":");
+                        console.log("productsArraywithoutCount", productsArraywithoutCount[0])
 
-                        totalItemCount = totalItemCount + parseInt(productsArraywithoutCount[1]),
+                        totalItemCount = totalItemCount + parseInt(productsArraywithoutCount[0]),
 
                             productObj = {
-                                prname: productsArraywithoutWeight[0].replace(/\s*$/, ''),
-                                prweight: productsArraywithoutWeight[1].replace(/\s/g, ''),
-                                prcount: productsArraywithoutCount[1].replace(/\s/g, ''),
+                                prname: productsArraywithoutCount[0] && productsArraywithoutCount[0].replace(/^\s+|\s+$/g, function(match) {
+                                    return ``.repeat(match.length)
+                                }),
+                                prweight: productsArraywithoutWeight[1] && productsArraywithoutWeight[1].replace(/^\s+|\s+$/g, function(match) {
+                                    return ``.repeat(match.length)
+                                }),
+                                prcount: productsArraywithoutCount[1] && productsArraywithoutCount[1].replace(/^\s+|\s+$/g, function(match) {
+                                    return ``.repeat(match.length)
+                                }),
                             }
                         console.log("productObj", productObj);
 
@@ -308,9 +399,11 @@ const upload = async(req, res) => {
                             for (i = 0; i < productArray.length; i++) {
                                 const sendResFrmProName = async(value) => {
                                     console.log("sendResFrmProName", value)
-                                    value[0] && value[0].dataValues.id ? productIdArrayFinal.push(value[0].dataValues.id) : '';
+                                    value.length > 0 && value[0].dataValues.id ? productIdArrayFinal.push(value[0].dataValues.id) : '';
                                     productObj.id = value[0].dataValues.id;
                                 };
+                                console.log("b4 rescheck", productObj, productObj.prname)
+
                                 let resCus = await product.findAllByNameByBE(productObj.prname, sendResFrmProName);
                                 console.log("rescheck", resCus, productIdArrayFinal)
                             }
@@ -336,26 +429,26 @@ const upload = async(req, res) => {
                     };
 
                     const objOrder = {
-                        barcode: row['ID'],
-                        weight: row['Weight'],
-                        itemCount: totalItemCount,
+                            barcode: row['ID'],
+                            weight: row['Weight'],
+                            itemCount: totalItemCount,
 
-                        paid: false,
-                        total: row['COD Amount'],
-                        status: 'packing',
-                        shippingAddress: row['Recipient Address'],
-                        paymentMethod: 'COD',
-                        shippingMethod: 'delivery',
-                        trackingNumber: row['ID'],
+                            paid: false,
+                            total: row['COD Amount'],
+                            status: 'packing',
+                            shippingAddress: row['Recipient Address'],
+                            paymentMethod: 'COD',
+                            shippingMethod: 'delivery',
+                            trackingNumber: row['ID'],
 
-                        productId: productIdArrayFinal,
-                        customerId: CUSID,
-                        userId: req.body.userId || 0,
+                            productId: productIdArrayFinal,
+                            customerId: CUSID,
+                            userId: req.body.userId || 0,
 
-                        exchange: row['Exchange'],
-                        isActive: true,
-                    }
-                    let resOrder = await order.createByBE(objOrder, sendResFrmOrder);
+                            exchange: row['Exchange'],
+                            isActive: true,
+                        }
+                        // let resOrder = await order.createByBE(objOrder, sendResFrmOrder);
                     console.log("obj", objOrder)
 
                     // 7.0 
@@ -390,20 +483,19 @@ const upload = async(req, res) => {
                 }
 
             })
-            .on("end", () => {
-                console.log("Eeeeeeeeeeeeeenddddddddddd2222")
-                    // Tutorial.bulkCreate(tutorials)
-                    //     .then(() => {
-                    //         res.status(200).send({
-                    //             message: "Uploaded the file successfully: " + req.file.originalname,
-                    //         });
-                    //     })
-                    //     .catch((error) => {
-                    //         res.status(500).send({
-                    //             message: "Fail to import data into database!",
-                    //             error: error.message,
-                    //         });
-                    //     });
+            .on("end", (err) => {
+                setTimeout(async function() {
+                    console.log(err)
+                    console.log("Eeeeeeeeeeeeeenddddddddddd2222", err)
+
+                    if (err) {
+                        res.send("success");
+                    } else {
+                        res.status(500).send({
+                            message: err.message || "Some error occurred while uploading."
+                        })
+                    }
+                }, 3000);
             });
     } catch (error) {
         console.log(error);
@@ -414,13 +506,15 @@ const upload = async(req, res) => {
 };
 
 const sendToDelivery = (req, res) => {
+    const apiPath = 'https://fardardomestic.com/api/p_request_v1.02.phps';
     const options = {
         url: 'https://fardardomestic.com/api/p_request_v1.02.php',
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': '*/*',
-            'Host': '<calculated when request is sent>'
+            'Host': '<calculated when request is sent>',
+            'User-Agent': 'request'
         },
         data: {
             "client_id": "9017",

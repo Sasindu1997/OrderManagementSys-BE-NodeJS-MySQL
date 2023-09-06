@@ -41,7 +41,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    UtilityExpenses.findAll({ where: condition })
+    UtilityExpenses.findAll({ where: condition, order: UtilityExpenses.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

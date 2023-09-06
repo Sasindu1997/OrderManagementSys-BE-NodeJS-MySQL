@@ -56,7 +56,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Product.findAll({ where: condition })
+    Product.findAll({ where: condition, order: Product.sequelize.literal('id DESC') })
         .then(async data => {
             async function addData() {
                 for (let index = 0; index < data.length; index++) {
@@ -86,7 +86,7 @@ exports.findAllByNameByBE = (productName, send) => {
         }
     } : null;
 
-    Product.findAll({ where: condition })
+    Product.findAll({ where: condition, order: Product.sequelize.literal('id DESC') })
         .then(async data => {
             // async function addData() {
             //     for (let index = 0; index < data.length; index++) {

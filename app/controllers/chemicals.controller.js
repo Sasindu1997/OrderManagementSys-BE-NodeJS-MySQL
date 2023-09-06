@@ -52,7 +52,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Chemicals.findAll({ where: condition })
+    Chemicals.findAll({ where: condition, order: Chemicals.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

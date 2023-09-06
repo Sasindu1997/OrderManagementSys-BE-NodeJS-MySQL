@@ -1,8 +1,8 @@
 const db = require("../models");
-const Category = db.categories;
+const Tutorial = db.tutorials;
 const Op = db.Sequelize.Op;
 
-// Create and Save a new Category
+// Create and Save a new Tutorial
 exports.create = (req, res) => {
     // Validate request
     if (!req.body.title) {
@@ -12,26 +12,26 @@ exports.create = (req, res) => {
         return;
     }
 
-    // Create a Category
-    const category = {
+    // Create a Tutorial
+    const tutorial = {
         title: req.body.title,
         description: req.body.description,
-        isActive: req.body.isActive ? req.body.isActive : false
+        published: req.body.published ? req.body.published : false
     };
 
-    // Save Category in the database
-    Category.create(category)
+    // Save Tutorial in the database
+    Tutorial.create(tutorial)
         .then(data => {
             res.send(data);
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while creating the Category."
+                message: err.message || "Some error occurred while creating the Tutorial."
             });
         });
 };
 
-// Retrieve all Categorys from the database.
+// Retrieve all Tutorials from the database.
 exports.findAll = (req, res) => {
     const title = req.query.title;
     var condition = title ? {
@@ -40,117 +40,113 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Category.findAll({ where: condition, order: Category.sequelize.literal('id DESC') })
+    Tutorial.findAll({ where: condition })
         .then(data => {
             res.send(data);
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while retrieving categories."
+                message: err.message || "Some error occurred while retrieving tutorials."
             });
         });
 };
 
-// Find a single Category with an id
+// Find a single Tutorial with an id
 exports.findOne = (req, res) => {
-    console.log("req", req.params.id, res.send)
     const id = req.params.id;
 
-    Category.findByPk(id)
+    Tutorial.findByPk(id)
         .then(data => {
             if (data) {
                 res.send(data);
             } else {
                 res.status(404).send({
-                    message: `Cannot find Category with id=${id}.`
+                    message: `Cannot find Tutorial with id=${id}.`
                 });
             }
         })
         .catch(err => {
-            console.log("err", err)
-            console.log("res", res)
-
-            // res.status(500).send({
-            //     message: "Error retrieving Category with id=" + id
-            // });
+            res.status(500).send({
+                message: "Error retrieving Tutorial with id=" + id
+            });
         });
 };
 
-// Update a Category by the id in the request
+// Update a Tutorial by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
 
-    Category.update(req.body, {
+    Tutorial.update(req.body, {
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Category was updated successfully."
+                    message: "Tutorial was updated successfully."
                 });
             } else {
                 res.send({
-                    message: `Cannot update Category with id=${id}. Maybe Category was not found or req.body is empty!`
+                    message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Error updating Category with id=" + id
+                message: "Error updating Tutorial with id=" + id
             });
         });
 };
 
-// Delete a Category with the specified id in the request
+// Delete a Tutorial with the specified id in the request
 exports.delete = (req, res) => {
     const id = req.params.id;
 
-    Category.destroy({
+    Tutorial.destroy({
             where: { id: id }
         })
         .then(num => {
             if (num == 1) {
                 res.send({
-                    message: "Category was deleted successfully!"
+                    message: "Tutorial was deleted successfully!"
                 });
             } else {
                 res.send({
-                    message: `Cannot delete Category with id=${id}. Maybe Category was not found!`
+                    message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
                 });
             }
         })
         .catch(err => {
             res.status(500).send({
-                message: "Could not delete Category with id=" + id
+                message: "Could not delete Tutorial with id=" + id
             });
         });
 };
 
-// Delete all Categorys from the database.
+// Delete all Tutorials from the database.
 exports.deleteAll = (req, res) => {
-    Category.destroy({
+    Tutorial.destroy({
             where: {},
             truncate: false
         })
         .then(nums => {
-            res.send({ message: `${nums} Categorys were deleted successfully!` });
+            res.send({ message: `${nums} Tutorials were deleted successfully!` });
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while removing all categorys."
+                message: err.message || "Some error occurred while removing all tutorials."
             });
         });
 };
 
-// Find all published Categorys
+// Find all published Tutorials
 exports.findAllPublished = (req, res) => {
-    Category.findAll({ where: { published: true } })
+    Tutorial.findAll({ where: { published: true } })
         .then(data => {
             res.send(data);
         })
         .catch(err => {
             res.status(500).send({
-                message: err.message || "Some error occurred while retrieving categorys."
+                message: err.message || "Some error occurred while retrieving tutorials."
             });
         });
 };

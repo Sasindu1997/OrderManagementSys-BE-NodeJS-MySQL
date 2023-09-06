@@ -44,7 +44,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    SubCategories.findAll({ where: condition })
+    SubCategories.findAll({ where: condition, order: SubCategories.sequelize.literal('id DESC') })
         .then(async(data) => {
             async function addData() {
                 for (let index = 0; index < data.length; index++) {

@@ -54,7 +54,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    RowMatterial.findAll({ where: condition })
+    RowMatterial.findAll({ where: condition, order: RowMatterial.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

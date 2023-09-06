@@ -45,7 +45,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Users.findAll({ where: condition })
+    Users.findAll({ where: condition, order: Users.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

@@ -41,7 +41,7 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Income.findAll({ where: condition })
+    Income.findAll({ where: condition, order: Income.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })

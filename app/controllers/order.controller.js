@@ -8,7 +8,7 @@ const Users = db.users;
 // Create and Save a new Order
 exports.create = (req, res) => {
     // Validate request
-    if (!req.body.productId, !req.body.itemCount, !req.body.total) {
+    if (!req.body.productDetails, !req.body.itemCount, !req.body.total) {
         res.status(400).send({
             message: "Content can not be empty!"
         });
@@ -37,6 +37,10 @@ exports.create = (req, res) => {
     // Save Order in the database
     Order.create(order)
         .then(data => {
+            req.body.productDetails && req.body.productDetails.map(product => {
+                console.log(product, product.prId, product.count)
+                updateStocksSingle(product.prId, product.count)
+            })
             res.send(data);
         })
         .catch(err => {
@@ -92,11 +96,14 @@ exports.findAll = (req, res) => {
     Order.findAll({ where: condition })
         .then(async data => {
             async function addData() {
+                console.log(data)
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
-                    element.dataValues.productDetails = []
-                    for (let j = 0; j < element.dataValues.productId.length; j++) {
-                        console.log("****************************")
+                    element.dataValues.productData = []
+                    console.log("#########", element.dataValues.productDetails)
+                    for (let j = 0; j < element.dataValues.productDetails.length; j++) {
+                        console.log("#########", element.dataValues.productDetails)
+
                         await Products.findByPk(element.dataValues.productId[j]).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productDetails.push({
@@ -492,6 +499,24 @@ exports.newCustomersCount = (req, res) => {
 };
 
 exports.updateStocks = (id, count, req, res) => {
+    const queryString = `UPDATE orderman.products
+                        SET products.maxStockLevel = products.maxStockLevel - '${count}'
+                        WHERE products.id = '${id}';`
+
+    Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+            res(data);
+        })
+        .catch((err) => {
+            res({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.updateStocksSingle = (id, count) => {
+    console.log("ppppppppppppppppppppppppppppppppppppppppppp")
     const queryString = `UPDATE orderman.products
                         SET products.maxStockLevel = products.maxStockLevel - '${count}'
                         WHERE products.id = '${id}';`

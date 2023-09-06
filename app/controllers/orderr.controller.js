@@ -4,8 +4,10 @@ const Op = db.Sequelize.Op;
 const Products = db.products;
 const Customers = db.customers;
 const Users = db.users;
+const Order = db.orders;
 const delivery = require("../controllers/delivery.controller");
 const SMSController = require("../controllers/sms.controller");
+const OrderController = require("../controllers/orderr.controller");
 var store = require('store')
 const axios = require("axios");
 
@@ -105,6 +107,12 @@ exports.create = async(req, res) => {
     Orderr.create(order)
         .then(data => {
             if (data) {
+                //update stocks
+                req.body.productDetails && req.body.productDetails.map(product => {
+                    console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
+                    OrderController.updateStocksSingle(product.prid, product.prc)
+                })
+
                 // Send SMS
                 sendSMS(deliveryData && deliveryData.description || "LA ROCHER", customerData && customerData.dataValues.phone)
 
@@ -181,18 +189,20 @@ exports.findAll = (req, res) => {
         }
     } : null;
 
-    Orderr.findAll({ where: condition })
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
         .then(async data => {
+
             async function addData() {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
-                    element.dataValues.productDetails = []
-                    for (let j = 0; j < element.dataValues.productId.length; j++) {
-                        console.log("****************************")
-                        await Products.findByPk(element.dataValues.productId[j]).then(dt => {
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
-                            dt && dt.dataValues && element.dataValues.productDetails.push({
-                                pId: element.dataValues.productId[j],
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
                                 pName: dt.dataValues.productName,
                                 pCode: dt.dataValues.productCode,
                                 pdescription: dt.dataValues.description,
@@ -201,7 +211,9 @@ exports.findAll = (req, res) => {
                                 psubCategoryId: dt.dataValues.subCategoryId,
                                 pbrand: dt.dataValues.brand,
                                 pvolume: dt.dataValues.volume,
-                                ptype: dt.dataValues.type
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
                             })
                         })
                     }
@@ -241,11 +253,14 @@ exports.findOne = (req, res) => {
         .then(async data => {
             if (data) {
                 if (data) {
-                    data.dataValues.productDetails = []
-                    for (let j = 0; j < data.dataValues.productId.length; j++) {
-                        await Products.findByPk(data.dataValues.productId[j]).then(dt => {
-                            data.dataValues.productDetails.push({
-                                pId: data.dataValues.productId[j],
+                    data.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", data._previousDataValues.productDetails[j])
+                        await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && data.dataValues.productData.push({
+                                pId: data._previousDataValues.productDetails[j].prid,
                                 pName: dt.dataValues.productName,
                                 pCode: dt.dataValues.productCode,
                                 pdescription: dt.dataValues.description,
@@ -254,7 +269,66 @@ exports.findOne = (req, res) => {
                                 psubCategoryId: dt.dataValues.subCategoryId,
                                 pbrand: dt.dataValues.brand,
                                 pvolume: dt.dataValues.volume,
-                                ptype: dt.dataValues.type
+                                ptype: dt.dataValues.type,
+                                ocount: data._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+                    data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
+                            dt && dt.dataValues ? data.dataValues.cphone = dt.dataValues.phone : data.dataValues.cphone = '',
+                            dt && dt.dataValues ? data.dataValues.caddress = dt.dataValues.address : data.dataValues.caddress = '',
+                            dt && dt.dataValues ? data.dataValues.cdistrict = dt.dataValues.district : data.dataValues.cdistrict = ''
+
+                    })
+                    data && data.dataValues && await Users.findByPk(data.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? data.dataValues.ufullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.uemail = dt.dataValues.email : data.dataValues.uemail = '',
+                            dt && dt.dataValues ? data.dataValues.urole = dt.dataValues.role : data.dataValues.urole = '',
+                            dt && dt.dataValues ? data.dataValues.uphoneNumber = dt.dataValues.phoneNumber : data.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? data.dataValues.uaddress = dt.dataValues.address : data.dataValues.uaddress = ''
+                    })
+                }
+                res.send(data);
+            } else {
+                res.status(404).send({
+                    message: `Cannot find Orderr with id=${id}.`
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: "Error retrieving Orderr with id=" + id
+            });
+        });
+};
+
+exports.findOneLocal = (id, res) => {
+    Orderr.findByPk(id)
+        .then(async data => {
+            if (data) {
+                if (data) {
+                    data.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", data._previousDataValues.productDetails[j])
+                        await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && data.dataValues.productData.push({
+                                pId: data._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: data._previousDataValues.productDetails[j].prc,
+
                             })
                         })
                     }
@@ -350,17 +424,64 @@ exports.searchBy = (req, res) => {
     console.log(req.params)
     const searchSelect = req.params.searchSelect;
     const searchvalue = req.params.searchvalue;
-    const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}';`
+    const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}' ORDER BY orderrs.id DESC;`
+
+    order: Orderr.sequelize.literal('id DESC')
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
-        .then(r => res.send(r))
+        .then(async data => {
+            async function addData() {
+                for (let element of data) {
+                    console.log("666666666666666666666666666", element)
+                    element.productData = []
+                    for (let j = 0; j < element.productDetails.length; j++) {
+                        console.log("****************************", element.productDetails[j])
+                        await Products.findByPk(element.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.productData.push({
+                                pId: element.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && await Customers.findByPk(element.customerId).then(dt => {
+                        dt && dt.dataValues ? element.cfullName = dt.dataValues.fullName : element.cfullName = '',
+                            dt && dt.dataValues ? element.cemail = dt.dataValues.email : element.cemail = '',
+                            dt && dt.dataValues ? element.cphone = dt.dataValues.phone : element.cphone = '',
+                            dt && dt.dataValues ? element.caddress = dt.dataValues.address : element.caddress = '',
+                            dt && dt.dataValues ? element.cdistrict = dt.dataValues.district : element.cdistrict = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.userId).then(dt => {
+                        dt && dt.dataValues ? element.ufullName = dt.dataValues.fullName : element.cfullName = '',
+                            dt && dt.dataValues ? element.uemail = dt.dataValues.email : element.uemail = '',
+                            dt && dt.dataValues ? element.urole = dt.dataValues.role : element.urole = '',
+                            dt && dt.dataValues ? element.uphoneNumber = dt.dataValues.phoneNumber : element.uphoneNumber = '',
+                            dt && dt.dataValues ? element.uaddress = dt.dataValues.address : element.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data)
+        })
         .catch((err) => {
             throw err;
         });
 };
 
 exports.searchByCusPhone = (phn, res) => {
-    const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
+    const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
@@ -597,5 +718,209 @@ exports.updateStocks = (id, count, req, res) => {
             res({
                 message: err.message || "Some error occurred while retrieving orders."
             });
+        });
+};
+
+exports.updateStocksSingle = (id, count) => {
+    console.log("ppppppppppppppppppppppppppppppppppppppppppp", id, count)
+    const queryString = `UPDATE orderman.products
+                        SET products.maxStockLevel = products.maxStockLevel - '${count}'
+                        WHERE products.id = '${id}';`
+
+    id && count && Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            console.log(data)
+        })
+        .catch((err) => {
+            console.log(err)
+        });
+};
+
+exports.findAllReturned = (req, res) => {
+    var condition = {
+        status: {
+            [Op.like]: `%${'Returned'}%`
+        }
+    };
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.findAllCancelled = (req, res) => {
+    var condition = {
+        status: {
+            [Op.like]: `%${'Cancelled'}%`
+        }
+    };
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.cancelOrder = (req, res) => {
+    console.log(req.body.isChecked)
+    const queryString = `UPDATE orderman.orderrs
+        SET orderrs.status = 'Cancelled'
+        WHERE orderrs.id = '${req.params.id}';`
+
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
+        .then(data => {
+            req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
+            console.log(data)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.returnOrder = (req, res) => {
+
+    const queryString = `UPDATE orderman.orderrs
+    SET orderrs.status = 'Returned'
+    WHERE orderrs.id = '${req.params.id}';`
+
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
+        .then(data => {
+            console.log(data)
+            req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.updateStocksReturned = (id, count) => {
+
+    const queryString = `SELECT * FROM orderman.orderrs
+                        WHERE orderrs.id = '${id}';`
+
+    id && Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            data[0] && data[0].productDetails && data[0].productDetails.map(prod => {
+                console.log("ppppppppppppppppppppppppppppppppppppppppppp", prod, prod.prid, prod.prc);
+                const queryString = `UPDATE orderman.products
+                SET products.maxStockLevel = products.maxStockLevel + '${prod.prc}'
+                WHERE products.id = '${prod.prid}';`
+
+                Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
+                    .then(data => {
+                        console.log("reddddddddddddddddds", data)
+                    })
+                    .catch((err) => {
+                        console.log(err)
+                    });
+            })
+        })
+        .catch((err) => {
+            console.log(err)
         });
 };

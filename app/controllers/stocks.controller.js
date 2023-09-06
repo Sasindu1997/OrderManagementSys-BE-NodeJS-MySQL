@@ -201,7 +201,7 @@ exports.findOne = (req, res) => {
 exports.findByProductId = (req, res) => {
     const id = req.params.id;
 
-    Stock.findAll({ where: { productId: id } })
+    Stock.findAll({ where: { productId: id }, order: Stock.sequelize.literal('id DESC') })
         .then(data => {
             if (data) {
                 res.send(data);
@@ -221,7 +221,7 @@ exports.findByProductId = (req, res) => {
 exports.findByProductIdAndType = (req, res) => {
     const id = req.params.id;
     const type = req.params.type;
-    Stock.findAll({ where: { productId: id, stockType: type } })
+    Stock.findAll({ where: { productId: id, stockType: type }, order: Stock.sequelize.literal('id DESC') })
         .then(data => {
             if (data) {
                 res.send(data);
