@@ -22,13 +22,13 @@ exports.login = async(req, res) => {
     return data
 };
 
-exports.sendSMS = async(mask, phoneNumbers, res) => {
+exports.sendSMS = async(mask, phoneNumbers, smsbody, res) => {
     // Validate request
     let obj = {
             "campaignName": mask,
             "mask": mask,
             "numbers": phoneNumbers,
-            "content": "Your Order has been placed. Thank you."
+            "content": smsbody || 'Your Order has been placed. Thank you.'
         }
         // Save Users in the database
     const data = await axios.post("https://bsms.hutch.lk/api/sendsms", obj, {
@@ -37,8 +37,13 @@ exports.sendSMS = async(mask, phoneNumbers, res) => {
             'X-API-VERSION': 'v1',
             'Authorization': `Bearer ${store.get('sms').accessToken}`
         }
+    }).then(data => {
+        console.log(data)
+        return data.data
+    })
+    .catch(err => {
+        console.log(err)
     });
-    return data.data
 };
 
 // Retrieve all Userss from the database.

@@ -9,6 +9,9 @@ module.exports = (sequelize, Sequelize) => {
         phone: {
             type: Sequelize.STRING
         },
+        phone2: {
+            type: Sequelize.STRING
+        },
         address: {
             type: Sequelize.STRING
         },

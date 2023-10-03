@@ -17,6 +17,7 @@ exports.create = (req, res) => {
         fullName: req.body.fullName,
         email: req.body.email,
         phone: req.body.phone,
+        phone2: req.body.phone2,
         address: req.body.address,
         district: req.body.district,
         isActive: req.body.isActive ? req.body.isActive : false,

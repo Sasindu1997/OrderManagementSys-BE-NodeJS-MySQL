@@ -151,3 +151,31 @@ exports.findAllPublished = (req, res) => {
             });
         });
 };
+
+exports.multipleSearch = (req, res) => {
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    
+    var condition = ''
+
+    if(startDate && endDate){
+        condition = `WHERE utilities.createdAt >= '${startDate}' AND utilities.createdAt <= '${endDate}'`   
+    }
+    else if(startDate){
+        condition = `WHERE utilities.createdAt >='${startDate}'`   
+    }
+    else if(endDate){
+        condition = `WHERE utilities.createdAt <= '${endDate}'`   
+    }
+
+    const queryString = `SELECT * FROM orderman.utilities ${condition} ORDER BY id DESC;`
+    UtilityExpenses.sequelize.query(queryString, { type: UtilityExpenses.sequelize.QueryTypes.SELECT })
+    .then(async data => {
+        res.send(data);
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || "Some error occurred while retrieving expenses."
+        });
+    });
+};

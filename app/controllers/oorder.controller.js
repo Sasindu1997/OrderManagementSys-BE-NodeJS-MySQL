@@ -1,15 +1,17 @@
 const db = require("../models");
-const Orderr = db.orderrs;
+const Orderr = db.oorders;
 const Op = db.Sequelize.Op;
 const Products = db.products;
 const Customers = db.customers;
 const Users = db.users;
-const Order = db.orders;
+const Order = db.oorders;
 const delivery = require("../controllers/delivery.controller");
 const SMSController = require("../controllers/sms.controller");
-const OrderController = require("../controllers/orderr.controller");
+const OrderController = require("../controllers/oorder.controller");
 var store = require('store')
 const axios = require("axios");
+// const InvoiceNumber = require("invoice-number");
+
 
 const sendToDelivery2 = async(req, res) => {
     console.log("**********************************************************************", req)
@@ -99,36 +101,38 @@ const sendToDelivery = async (req) => {
 // Create and Save a new Orderr
 exports.create = async(req, res) => {
     let deliveryData = {};
-    let customerData = {}
-    const sendSMS = (mask, numbers) => {
+    let customerData = {};
+    let customerId = 0;
+    let supplierData = {};
+    let newInvoiceNumber = false;
+    const sendSMS = (mask, numbers, smsbody) => {
         console.log("numbers", mask, numbers)
         const res = SMSController.login();
         res.then(data => {
             store.set('sms', { accessToken: `${data.data.accessToken}` })
-            const resSMS = SMSController.sendSMS(mask, numbers);
+            const resSMS = SMSController.sendSMS(mask, numbers, smsbody);
             console.log("resSMS", resSMS)
         })
     }
+
+    const sendResFrmLat = async(value) => {
+        newInvoiceNumber = value.length > 0 ? parseInt(value[0].invoiceNumber) + 1 : '000001'; 
+        // console.log("sendResFrmLat ", value[0].invoiceNumber + 1, newInvoiceNumber)
+    };
+    let resL = await OrderController.getLatestRec({}, sendResFrmLat);
 
     console.log("req.body.orderId", req.body.orderId)
 
     console.log(req.body)
         // Validate request
-    if (!req.body.productDetails, !req.body.total, !req.body.customerId) {
+    if (!req.body.productDetails, !req.body.total, !req.body.fullName, !req.body.phone, !req.body.address) {
         res.status(400).send({
             message: "Content can not be empty!"
         });
         return;
     }
-    if (req.body.isDeliveryAdded && req.body.deliveryId) {
-        const send = async(value) => {
-            deliveryData = value ? value.dataValues ? value.dataValues : {} : {};
-        }
-        let res = await delivery.findOneBE({ params: { id: req.body.deliveryId } }, send);
-    }
-    if (req.body.customerId) {
-        customerData = await Customers.findByPk(req.body.customerId);
-        console.log(customerData.dataValues, deliveryData)
+    if (req.body.supplierId) {
+        supplierData = await Users.findByPk(req.body.supplierId);
     }
     // req.body.isDeliveryAdded
     // req.body.deliveryId
@@ -138,67 +142,122 @@ exports.create = async(req, res) => {
         return pr + su;
     };
 
-    // Create a Orderr
-    const order = {
-        barcode: req.body.barcode || trackingNumber("LR001", "SO"),
-        weight: req.body.weight,
-        itemCount: req.body.itemCount,
-        paid: req.body.paid ? req.body.paid : false,
-        total: req.body.total,
-        status: req.body.status,
-        shippingAddress: req.body.shippingAddress,
-        paymentMethod: req.body.paymentMethod,
-        shippingMethod: req.body.shippingMethod,
-        trackingNumber: req.body.trackingNumber || trackingNumber("LR001", "SO"),
-        productId: req.body.productId,
-        productDetails: req.body.productDetails,
-        customerId: req.body.customerId,
-        userId: req.body.userId,
-        // orderId: req.body.orderId,
-        isActive: req.body.isActive ? req.body.isActive : false,
+    if (req.body.isDeliveryAdded && req.body.deliveryId) {
+        const send = async(value) => {
+            deliveryData = value ? value.dataValues ? value.dataValues : {} : {};
+        }
+        let res = await delivery.findOneBE({ params: { id: req.body.deliveryId } }, send);
+    }
+    if (req.body.customerId) {
+        customerData = await Customers.findByPk(req.body.customerId);
+    }else {
+        // Create a Customer
+    const customer = {
+        fullName: req.body.fullName,
+        email: req.body.email,
+        phone: req.body.phone,
+        phone2: req.body.phone2,
+        address: req.body.address,
+        district: req.body.district,
+        isActive: true,
     };
 
-    // Save Orderr in the database
-    Orderr.create(order)
-        .then(data => {
-            if (data) {
-                  // Send SMS
-                sendSMS(deliveryData && deliveryData.description || "LA ROCHER", customerData && customerData.dataValues.phone)
+    // Save Customer in the database
+    Customers.create(customer)
+        .then(async data => {
+            console.log("-----------------------------------------------------------------")
+            console.log(data.dataValues.id)
+            customerId = data.dataValues.id
+        
+            // Create a Orderr
+            const order = {
+                barcode: req.body.barcode || trackingNumber("LR001", "SO"),
+                weight: req.body.weight,
+                total: req.body.total,
+                status: req.body.status,
+                shippingAddress: req.body.address,
+               
+                paymentMethod: req.body.paymentMethod,
+                shippingMethod: req.body.shippingMethod,
+                trackingNumber: req.body.trackingNumber || trackingNumber("LR001", "SO"),
+                productId: req.body.productId,
+                productDetails: req.body.productDetails,
+        
+                cusName: req.body.fullName,
+                cusPhone: req.body.phone,
+        
+                customerId: data.dataValues.id,
+                fullName: req.body.fullName,
+                email: req.body.email,
+                phone: req.body.phone,
+                phone2: req.body.phone2,
+                address: req.body.address,
+                district: req.body.district,
+                
+                userId: req.body.userId,
+                // orderId: req.body.orderId,
+                userRole: req.body.userRole,
+                userName: req.body.userName,
+                subTotal: req.body.subTotal, 
+                deliveryCharge: req.body.deliveryCharge ? req.body.deliveryCharge : '0',
+                finalStatus: req.body.finalStatus, 
+                hub: req.body.hub, 
+                invoiceNumber: newInvoiceNumber ? newInvoiceNumber : '000001', 
+                parcelType: req.body.parcelType, 
+                deliveryId: req.body.deliveryId, 
+                supplierName: supplierData && supplierData.fullName, 
+                supplierId: req.body.supplierId ?  req.body.supplierId : '0',
+                remark: req.body.remark, 
+                isActive: req.body.isActive ? req.body.isActive : false,
+            };
+        
+            // Save Orderr in the database
+            Orderr.create(order)
+                .then(data => {
+                    if (data) {
+                        // update stocks
+                        req.body.productDetails && req.body.productDetails.map(product => {
+                            console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
+                            OrderController.updateStocksSingle(product.prid, product.prc)
+                        })
+        
+                        // Send SMS
+                        sendSMS(deliveryData && deliveryData.description || "LA ROCHER", req.body.phone || req.body.phone2, req.body.smsbody )
+        
+                        // Send to Delivery
+                        // const sendResFrmsendToDelivery = async(value) => {
+                        //     console.log("sendResFrmsendToDelivery", value);
+                        // };
+        
+                        // deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
+                        //     "client_id": deliveryData.clientId,
+                        //     "api_key": deliveryData.apiKey,
+                        //     "recipient_name": customerData.dataValues.fullName,
+                        //     "recipient_contact_no": customerData.dataValues.phone,
+                        //     "recipient_address": customerData.dataValues.address,
+                        //     "recipient_city": customerData.dataValues.district,
+                        //     "parcel_type": 1,
+                        //     "parcel_description": "test test test",
+                        //     "cod_amount": req.body.total,
+                        //     "order_id": req.body.orderId,
+                        //     "exchange": 0,
+                        // }, sendResFrmsendToDelivery)
+                    }
+                    res.send(data);
+                })
+                .catch(err => {
+                    res.status(500).send({
+                        message: err.message || "Some error occurred while creating the Orderr."
+                    });
+                });
+                
 
-                // //update stocks
-                // req.body.productDetails && req.body.productDetails.map(product => {
-                //     console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
-                //     OrderController.updateStocksSingle(product.prid, product.prc)
-                // })
-
-              
-
-                // Send to Delivery
-                const sendResFrmsendToDelivery = async(value) => {
-                    console.log("sendResFrmsendToDelivery", value);
-                };
-
-                deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
-                    "client_id": deliveryData.clientId,
-                    "api_key": deliveryData.apiKey,
-                    "recipient_name": customerData.dataValues.fullName,
-                    "recipient_contact_no": customerData.dataValues.phone,
-                    "recipient_address": customerData.dataValues.address,
-                    "recipient_city": customerData.dataValues.district,
-                    "parcel_type": 1,
-                    "parcel_description": "test test test",
-                    "cod_amount": req.body.total,
-                    "order_id": req.body.orderId,
-                    "exchange": 0,
-                }, sendResFrmsendToDelivery)
-            }
-            res.send(data);
         })
         .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while creating the Orderr."
-            });
+            console.log(err)
         });
+    }
+    
 };
 
 exports.createByBE = (newOrderr, send) => {
@@ -492,7 +551,7 @@ exports.searchBy = (req, res) => {
     console.log(req.params)
     const searchSelect = req.params.searchSelect;
     const searchvalue = req.params.searchvalue;
-    const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}' ORDER BY orderrs.id DESC;`
+    const queryString = `SELECT * FROM oorders INNER JOIN customers ON oorders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}' ORDER BY oorders.id DESC;`
 
     order: Orderr.sequelize.literal('id DESC')
 
@@ -549,7 +608,7 @@ exports.searchBy = (req, res) => {
 };
 
 exports.searchByCusPhone = (phn, res) => {
-    const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
+    const queryString = `SELECT * FROM oorders INNER JOIN customers ON oorders.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
     console.log("---------------------------", queryString)
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
@@ -615,7 +674,7 @@ exports.deleteAll = (req, res) => {
             truncate: false
         })
         .then(nums => {
-            res.send({ message: `${nums} Orderrs were deleted successfully!` });
+            res.send({ message: `${nums} Orders were deleted successfully!` });
         })
         .catch(err => {
             res.status(500).send({
@@ -624,7 +683,7 @@ exports.deleteAll = (req, res) => {
         });
 };
 
-// Find all published Orderrs
+// Find all published oorders
 exports.findAllPublished = (req, res) => {
     Orderr.findAll({ where: { published: true } })
         .then(data => {
@@ -928,11 +987,73 @@ exports.findAllCancelled = (req, res) => {
         });
 };
 
+exports.findAllExchanged = (req, res) => {
+    var condition = {
+        status: {
+            [Op.like]: `%${'Exchanged'}%`
+        }
+    };
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
 exports.cancelOrder = (req, res) => {
     console.log(req.body.isChecked)
-    const queryString = `UPDATE orderman.orderrs
-        SET orderrs.status = 'Cancelled'
-        WHERE orderrs.id = '${req.params.id}';`
+    const queryString = `UPDATE orderman.oorders
+        SET oorders.status = 'Cancelled'
+        WHERE oorders.id = '${req.params.id}';`
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
@@ -947,11 +1068,28 @@ exports.cancelOrder = (req, res) => {
         });
 };
 
+exports.exchangeOrder = (req, res) => {
+    const queryString = `UPDATE orderman.oorders
+        SET oorders.status = 'Exchanged'
+        WHERE oorders.id = '${req.params.id}';`
+
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
+        .then(data => {
+            req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
+            res.send(data);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
 exports.returnOrder = (req, res) => {
 
-    const queryString = `UPDATE orderman.orderrs
-    SET orderrs.status = 'Returned'
-    WHERE orderrs.id = '${req.params.id}';`
+    const queryString = `UPDATE orderman.oorders
+    SET oorders.status = 'Returned'
+    WHERE oorders.id = '${req.params.id}';`
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
@@ -968,13 +1106,12 @@ exports.returnOrder = (req, res) => {
 
 exports.updateStocksReturned = (id, count) => {
 
-    const queryString = `SELECT * FROM orderman.orderrs
-                        WHERE orderrs.id = '${id}';`
+    const queryString = `SELECT * FROM orderman.oorders
+                        WHERE oorders.id = '${id}';`
 
     id && Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             data[0] && data[0].productDetails && data[0].productDetails.map(prod => {
-                console.log("ppppppppppppppppppppppppppppppppppppppppppp", prod, prod.prid, prod.prc);
                 const queryString = `UPDATE orderman.products
                 SET products.maxStockLevel = products.maxStockLevel + '${prod.prc}'
                 WHERE products.id = '${prod.prid}';`
@@ -990,5 +1127,165 @@ exports.updateStocksReturned = (id, count) => {
         })
         .catch((err) => {
             console.log(err)
+        });
+};
+
+exports.getLatestRec = (req, res) => {
+    const queryString = `SELECT * FROM orderman.oorders ORDER BY id DESC LIMIT 1;`
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res(data)
+        })
+        .catch((err) => {
+            console.log(err)
+        });
+};
+
+//get orders by supplier id
+exports.getOrdersBySupplierId = (req, res) => {
+
+    const queryString = `SELECT 
+    DATE_FORMAT(calendar.month, '%Y-%m') AS month,
+    COALESCE(COUNT(o.id), 0) AS order_count
+FROM (
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 11 MONTH), '%Y-%m-01') AS month
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 10 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 9 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 8 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 7 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 5 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 4 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 3 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 2 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH), '%Y-%m-01')
+    UNION ALL
+    SELECT DATE_FORMAT(CURRENT_DATE, '%Y-%m-01') -- Include the current month
+) AS calendar
+LEFT JOIN 
+    orderman.oorders o
+ON 
+    DATE_FORMAT(o.createdAt, '%Y-%m') = DATE_FORMAT(calendar.month, '%Y-%m')
+    AND o.supplierId = '${req.params.id}'
+GROUP BY 
+    DATE_FORMAT(calendar.month, '%Y-%m')
+ORDER BY 
+    DATE_FORMAT(calendar.month, '%Y-%m');`
+
+
+    Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
+        .then(data => {
+            res.send(data)
+        })
+        .catch((err) => {
+            res.send(err)
+        });
+};
+
+// Retrieve all oorders from the database.
+exports.multipleSearch = (req, res) => {
+
+    const customerId = req.query.customerId;
+    const cusName = req.query.customerName;
+    const cusPhone = req.query.customerPhone;
+    const supplierName = req.query.supplier;
+    const status = req.query.status;
+    const trackingNumber = req.query.trackingNo;
+    const id = req.query.id;
+
+    var condition = {
+        cusName: {
+            [Op.like]: `%${cusName}%`
+        },
+        cusPhone: {
+            [Op.like]: `%${cusPhone}%`
+        },
+        supplierName: {
+            [Op.like]: `%${supplierName}%`
+        },
+        status:{
+            [Op.like]: `%${status}%`
+        },
+        trackingNumber: {
+            [Op.like]: `%${trackingNumber}%`
+        },
+        id: {
+            [Op.like]: `%${id}%`
+        }
+    };
+
+    for (const key in condition) {
+        if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
+            delete condition[key];
+        }
+    }
+    
+    console.log("######################################################", condition)
+
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = '',
+                            dt && dt.dataValues ? element.dataValues.ccfullName = dt.dataValues.fullName : element.dataValues.ccfullName = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
         });
 };

@@ -1,5 +1,6 @@
 const db = require("../models");
 const Expense = db.expenses;
+const expenseStream = db.expenseStream;
 const Op = db.Sequelize.Op;
 
 // Create and Save a new Expense
@@ -42,7 +43,16 @@ exports.findAll = (req, res) => {
     } : null;
 
     Expense.findAll({ where: condition, order: Expense.sequelize.literal('id DESC') })
-        .then(data => {
+        .then(async data => {
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element && element.dataValues && await expenseStream.findByPk(element.dataValues.name).then(dt => {
+                            dt && dt.dataValues ? element.dataValues.expenseStream = dt.dataValues.name : element.dataValues.incomeStream = ''
+                        })
+                }
+            }
+            await addData();
             res.send(data);
         })
         .catch(err => {
@@ -165,4 +175,52 @@ exports.findAllPublished = (req, res) => {
                 message: err.message || "Some error occurred while retrieving expenses."
             });
         });
+};
+
+exports.multipleSearch = (req, res) => {
+    const name = req.query.name;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    
+    var condition = ''
+
+    if(name && startDate && endDate){
+    console.log(name , startDate , endDate)
+
+        condition = `WHERE expenses.name = ${name} AND expenses.createdAt >= '${startDate}' AND expenses.createdAt <= '${endDate}'`   
+    }
+    if(!name && startDate && endDate){
+        condition = `WHERE expenses.createdAt >= '${startDate}' AND expenses.createdAt <= '${endDate}'`   
+    }
+    else if(startDate){
+        condition = `WHERE expenses.name = ${name} AND expenses.createdAt >='${startDate}'`   
+    }
+    else if(endDate){
+        condition = `WHERE expenses.name = ${name} AND expenses.createdAt <= '${endDate}'`   
+    }
+    else if(name){
+        condition = `WHERE expenses.name = ${name}`   
+    }
+    console.log("######################################################", condition)
+
+    const queryString = `SELECT * FROM orderman.expenses ${condition} ORDER BY id DESC;`
+    Expense.sequelize.query(queryString, { type: Expense.sequelize.QueryTypes.SELECT })
+    .then(async data => {
+        async function addData() {
+            for (let index = 0; index < data.length; index++) {
+                const element = data[index];
+                console.log("element", element);
+                element && await expenseStream.findByPk(element.name).then(dt => {
+                        dt && dt.dataValues ? element.expenseStream = dt.dataValues.name : element.incomeStream = ''
+                    })
+            }
+        }
+        await addData();
+        res.send(data);
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || "Some error occurred while retrieving expenses."
+        });
+    });
 };

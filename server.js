@@ -6,7 +6,7 @@ const app = express();
 global.__basedir = __dirname;
 
 var corsOptions = {
-    origin: "http://localhost:8081"
+    origin: "http://localhost:8080"
 };
 
 app.use(cors(corsOptions));
@@ -60,11 +60,12 @@ require("./app/routes/delivery.routes")(app);
 require("./app/routes/income.routes")(app);
 require("./app/routes/utilityExpenses.routes")(app);
 require("./app/routes/fardar.routes")(app);
-
+require("./app/routes/smstext.routes")(app);
+require("./app/routes/incomeStream.routes")(app);
+require("./app/routes/expenseStream.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
-server.keepAliveTimeout = 61 * 1000;

@@ -20,8 +20,12 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
+db.sms = require("./sms.model.js")(sequelize, Sequelize);
+db.incomeStream = require("./incomeStream.model.js")(sequelize, Sequelize);
+db.expenseStream = require("./expenseStream.model.js")(sequelize, Sequelize);
 db.orders = require("./order.model.js")(sequelize, Sequelize);
 db.orderrs = require("./orderr.model.js")(sequelize, Sequelize);
+db.oorders = require("./oorder.model.js")(sequelize, Sequelize);
 db.customers = require("./customer.model.js")(sequelize, Sequelize);
 db.products = require("./product.model.js")(sequelize, Sequelize);
 db.rowMatterials = require("./rawMatterial.model.js")(sequelize, Sequelize);
@@ -42,13 +46,19 @@ db.orderrs.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
 db.orderrs.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
 db.orderrs.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
 
+db.products.hasMany(db.oorders, { foreignKey: 'orderId', targetKey: 'id' });
+db.users.hasMany(db.oorders, { foreignKey: 'orderId', targetKey: 'id' });
+db.customers.hasMany(db.oorders, { foreignKey: 'orderId', targetKey: 'id' });
+db.oorders.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
+db.oorders.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
+db.oorders.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
+
 db.products.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.users.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.customers.hasMany(db.orders, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.products, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.users, { foreignKey: 'orderId', targetKey: 'id' });
 db.orders.belongsTo(db.customers, { foreignKey: 'orderId', targetKey: 'id' });
-
 
 db.categories.hasMany(db.stocks, { foreignKey: 'stockId', targetKey: 'id' });
 db.stocks.belongsTo(db.categories, { foreignKey: 'stockId', targetKey: 'id' });

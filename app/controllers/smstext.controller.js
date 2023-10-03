@@ -1,11 +1,11 @@
 const db = require("../models");
-const Users = db.users;
+const SmsText = db.sms;
 const Op = db.Sequelize.Op;
 
 // Create and Save a new Users
 exports.create = (req, res) => {
     // Validate request
-    if (!req.body.fullName) {
+    if (!req.body.text) {
         res.status(400).send({
             message: "Content can not be empty!"
         });
@@ -13,19 +13,13 @@ exports.create = (req, res) => {
     }
 
     // Create a Users
-    const users = {
-        fullName: req.body.fullName,
-        email: req.body.email,
-        userName: req.body.userName,
-        password: req.body.password,
-        role: req.body.role,
-        phoneNumber: req.body.phoneNumber,
-        address: req.body.address,
-        isActive: req.body.isActive ? req.body.isActive : false
+    const smsText = {
+        text: req.body.text,
+        isActive: req.body.isActive ? req.body.isActive : true
     };
 
     // Save Users in the database
-    Users.create(users)
+    SmsText.create(smsText)
         .then(data => {
             res.send(data);
         })
@@ -38,34 +32,14 @@ exports.create = (req, res) => {
 
 // Retrieve all Userss from the database.
 exports.findAll = (req, res) => {
-    const title = req.query.title;
+    const title = req.query.text;
     var condition = title ? {
         title: {
             [Op.like]: `%${title}%`
         }
     } : null;
 
-    Users.findAll({ where: condition, order: Users.sequelize.literal('id DESC') })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving userss."
-            });
-        });
-};
-
-exports.findAllManagers = (req, res) => {
-    console.log(req.params.role)
-    const role = req.params.role;
-    var condition = role ? {
-        role: {
-            [Op.like]: `%${role}%`
-        }
-    } : null;
-
-    Users.findAll({ where: condition, order: Users.sequelize.literal('id DESC') })
+    SmsText.findAll({ where: condition, order: SmsText.sequelize.literal('id DESC') })
         .then(data => {
             res.send(data);
         })
@@ -80,7 +54,7 @@ exports.findAllManagers = (req, res) => {
 exports.findOne = (req, res) => {
     const id = req.params.id;
 
-    Users.findByPk(id)
+    SmsText.findByPk(id)
         .then(data => {
             if (data) {
                 res.send(data);
@@ -101,7 +75,7 @@ exports.findOne = (req, res) => {
 exports.update = (req, res) => {
     const id = req.params.id;
 
-    Users.update(req.body, {
+    SmsText.update(req.body, {
             where: { id: id }
         })
         .then(num => {
@@ -126,7 +100,7 @@ exports.update = (req, res) => {
 exports.delete = (req, res) => {
     const id = req.params.id;
 
-    Users.destroy({
+    SmsText.destroy({
             where: { id: id }
         })
         .then(num => {
@@ -143,55 +117,6 @@ exports.delete = (req, res) => {
         .catch(err => {
             res.status(500).send({
                 message: "Could not delete Users with id=" + id
-            });
-        });
-};
-
-// Delete all Userss from the database.
-exports.deleteAll = (req, res) => {
-    Users.destroy({
-            where: {},
-            truncate: false
-        })
-        .then(nums => {
-            res.send({ message: `${nums} Userss were deleted successfully!` });
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while removing all userss."
-            });
-        });
-};
-
-// Find all published Userss
-exports.findAllPublished = (req, res) => {
-    Users.findAll({ where: { published: true } })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving userss."
-            });
-        });
-};
-
-// Marketing Manager
-exports.findAllByRole = (req, res) => {
-    const role = req.query.role;
-    var condition = title ? {
-        role: {
-            [Op.like]: `%${role}%`
-        }
-    } : null;
-
-    Users.findAll({ where: condition, order: Users.sequelize.literal('id DESC') })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: err.message || "Some error occurred while retrieving userss."
             });
         });
 };

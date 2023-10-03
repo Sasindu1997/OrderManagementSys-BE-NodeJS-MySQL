@@ -27,7 +27,7 @@ exports.create = (req, res) => {
         sku: req.body.sku,
         quantity: req.body.quantity,
         category: req.body.category,
-        subCategory: req.body.subCategory,
+        subCategory: req.body.subCategory ? req.body.subCategory : 0,
         brand: req.body.brand,
         imageURL: req.body.imageURL,
         minStockLevel: req.body.minStockLevel ? req.body.minStockLevel : 0,
@@ -61,15 +61,38 @@ exports.findAll = (req, res) => {
             async function addData() {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
-                    await Categories.findByPk(element.dataValues.categoryId).then(dt => {
-                        element.dataValues.categoryTitle = dt.dataValues.title
+                    element && element.dataValues && await Categories.findByPk(element.dataValues.categoryId).then(dt => {
+                        element.dataValues.categoryTitle = dt && dt.dataValues ? dt.dataValues.title : ''
                     })
-                    await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
-                        dt ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
+                    element && element.dataValues && await SubCategories.findByPk(element.dataValues.subCategoryId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.subCategoryTitle = dt.dataValues.title : element.dataValues.subCategoryTitle = ""
                     })
                 }
             }
             await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving products."
+            });
+        });
+};
+
+//by categoryId
+exports.findAllByCategoryId = (req, res) => {
+    console.log(req)
+
+    const categoryId = req.params.id;
+    var condition = categoryId ? {
+        categoryId: {
+            [Op.like]: `%${categoryId}%`
+        }
+    } : null;
+
+
+    Product.findAll({ where: condition, order: Product.sequelize.literal('id DESC') })
+        .then(async data => {
             res.send(data);
         })
         .catch(err => {

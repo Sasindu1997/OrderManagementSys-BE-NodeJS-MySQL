@@ -11,6 +11,7 @@ const fs = require("fs");
 const csv = require("fast-csv");
 const axios = require("axios");
 const { AxiosRequestConfig } = require("axios");
+const FormData = require('form-data')
 
 
 function setCharAt(str, index, chr) {
@@ -67,8 +68,9 @@ const uploadInit = async(req, res) => {
                     customerPhnArray.push(customerPhone);
                 }
 
-                // 2.0
-                //Check previous customers
+                console.log(customerPhnArray)
+                    // 2.0
+                    //Check previous customers
                 await customerPhnArray.map(async(number) => {
                     console.log("customerPhone", number)
                     if (number.charAt(0) == '0') {
@@ -85,7 +87,7 @@ const uploadInit = async(req, res) => {
                                 const showPrevOrders = async() => {
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            console.log("Check previous orders", value);
+                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -110,9 +112,11 @@ const uploadInit = async(req, res) => {
                                 // 3.0
                                 //show previous orders
                                 const showPrevOrders = async() => {
+                                    console.log("ppppppppppppppppppppppppppppppppp", duplicatePhnArray)
+
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            console.log("Check previous orders", value);
+                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -139,7 +143,7 @@ const uploadInit = async(req, res) => {
                                 const showPrevOrders = async() => {
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            console.log("Check previous orders", value);
+                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -151,7 +155,6 @@ const uploadInit = async(req, res) => {
                             }
                             // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     }
                 })
                 console.log("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv", prevOrderArray)
@@ -235,6 +238,8 @@ const upload = async(req, res) => {
                 let customerPhone = row['Recipient Mobile'];
                 if (customerPhone.includes("/")) {
                     customerPhnArray = customerPhone.split("/");
+                } else if (customerPhone.includes(",")) {
+                    customerPhnArray = customerPhone.split(",");
                 } else {
                     customerPhnArray.push(customerPhone);
                 }
@@ -314,14 +319,16 @@ const upload = async(req, res) => {
                 setTimeout(async function() {
                     console.log("item", duplicatePhnNumbersArray);
                     if (duplicatePhnNumbersArray.length > 0) {
-                        // const sendResFrmCusphone = async(value) => {
-                        //     console.log("sendResFrmCusphone", value)
-                        //     CUSID = value.length > 0 && value[0].dataValues && value[0].dataValues.id;
+                        // for(i = 0; i < duplicatePhnNumbersArray.length; i++ ){
+                        const sendResFrmCusphone = async(value) => {
+                            console.log("sendResFrmCusphone", value)
+                            CUSID = value.length > 0 && value[0].dataValues && value[0].dataValues.id;
 
-                        //     //caling check PRODUCTS
-                        //     CUSID && checkProducts();
-                        // };
-                        // let resCus = await customers.findAllByPhone(duplicatePhnNumbersArray[0], sendResFrmCusphone);
+                            //caling check PRODUCTS
+                            CUSID && checkProducts();
+                        };
+                        let resCus = await customers.findAllByPhone(duplicatePhnNumbersArray[0], sendResFrmCusphone);
+                        // }
                     } else {
                         addNewCus();
                     }
@@ -398,9 +405,14 @@ const upload = async(req, res) => {
                         if (productArray.length > 0) {
                             for (i = 0; i < productArray.length; i++) {
                                 const sendResFrmProName = async(value) => {
-                                    console.log("sendResFrmProName", value)
-                                    value.length > 0 && value[0].dataValues.id ? productIdArrayFinal.push(value[0].dataValues.id) : '';
-                                    productObj.id = value[0].dataValues.id;
+                                    console.log("sendResFrmProName", value[0].dataValues)
+                                    value.length > 0 && value[0].dataValues.id ? productIdArrayFinal.push({
+                                        prid: value[0].dataValues.id,
+                                        prc: productObj.prcount,
+                                        prn: productObj.prname
+                                    }) : '';
+                                    productObj.id = value.length > 0 &&
+                                        value[0].dataValues.id;
                                 };
                                 console.log("b4 rescheck", productObj, productObj.prname)
 
@@ -413,7 +425,7 @@ const upload = async(req, res) => {
                 setTimeout(async function() {
                     console.log("productIdArrayFinal", productIdArrayFinal);
                     if (productIdArrayFinal.length > 0) { addNewOrder() };
-                }, 2000);
+                }, 5000);
 
                 // // 7.0
                 // //Add new Order
@@ -423,32 +435,37 @@ const upload = async(req, res) => {
                         const sendResFrmupdate = async(value) => {
                             console.log("sendResFrmupdate", value);
                         };
-                        productArray.map(async pr => {
-                            await order.updateStocks(pr.id, pr.prcount, '', sendResFrmupdate);
+                        productIdArrayFinal.map(async pr => {
+                            await order.updateStocks(pr.prid, pr.prc, '', sendResFrmupdate);
                         })
                     };
 
+                    const trackingNumber = (pr, su) => {
+                        for (let i = 0; i < 5; i++) pr += ~~(Math.random() * 10);
+                        return pr + su;
+                    };
+
                     const objOrder = {
-                            barcode: row['ID'],
-                            weight: row['Weight'],
-                            itemCount: totalItemCount,
+                        barcode: row['ID'],
+                        weight: row['Weight'],
+                        itemCount: totalItemCount,
 
-                            paid: false,
-                            total: row['COD Amount'],
-                            status: 'packing',
-                            shippingAddress: row['Recipient Address'],
-                            paymentMethod: 'COD',
-                            shippingMethod: 'delivery',
-                            trackingNumber: row['ID'],
+                        paid: false,
+                        total: row['COD Amount'],
+                        status: 'packing',
+                        shippingAddress: row['Recipient Address'],
+                        paymentMethod: 'COD',
+                        shippingMethod: 'delivery',
+                        trackingNumber: row['Order ID'] || trackingNumber("LR001", "BO"),
+                        productDetails: productIdArrayFinal,
+                        productId: productIdArrayFinal,
+                        customerId: CUSID,
+                        userId: 1,
 
-                            productId: productIdArrayFinal,
-                            customerId: CUSID,
-                            userId: req.body.userId || 0,
-
-                            exchange: row['Exchange'],
-                            isActive: true,
-                        }
-                        // let resOrder = await order.createByBE(objOrder, sendResFrmOrder);
+                        exchange: row['Exchange'],
+                        isActive: true,
+                    }
+                    let resOrder = await order.createByBE(objOrder, sendResFrmOrder);
                     console.log("obj", objOrder)
 
                     // 7.0 
@@ -505,7 +522,93 @@ const upload = async(req, res) => {
     }
 };
 
-const sendToDelivery = (req, res) => {
+const sendToDelivery = async () => {
+    let data = new FormData();
+    data.append('api_key', 'api64f549a9bcb3d');
+    data.append('recipient_name', 'customer 2');
+    data.append('recipient_contact_no', '0778800000');
+    data.append('recipient_address', 'No.02, test lane, test district, test country');
+    data.append('recipient_city', 'colombo');
+    data.append('parcel_type', '1');
+    data.append('parcel_description', 'test test test');
+    data.append('cod_amount', '11111111111');
+    data.append('order_id', '45464565');
+    data.append('exchange', '0');
+    
+    let config = {
+      method: 'post',
+    //   maxBodyLength: Infinity,
+      url: 'https://fardardomestic.com/api/p_request_v1.02.php',
+      headers: { 
+        ...data.getHeaders()
+      },
+      data : data
+    };
+    
+    await axios.request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+      return response.data;
+    })
+    .catch((error) => {
+      console.log(error);a
+      return error;
+    });
+    
+}
+
+const sendToDelivery2 = () => {
+    var bodyFormData = new FormData();
+    // bodyFormData.append('userName', 'Fred');
+    bodyFormData.append("client_id", "req.client_id");
+    bodyFormData.append("api_key", "req.api_key");
+    bodyFormData.append("recipient_name", "req.recipient_name");
+    bodyFormData.append("recipient_contact_no", "req.recipient_contact_no");
+    bodyFormData.append("recipient_address", "req.recipient_address");
+    bodyFormData.append("recipient_city", "req.recipient_city");
+    bodyFormData.append("parcel_type", req.parcel_type);
+    bodyFormData.append("parcel_description", "req.parcel_description");
+    bodyFormData.append("cod_amount", "req.cod_amount");
+    bodyFormData.append("order_id", "req.order_id");
+    bodyFormData.append("exchange", 0);
+
+    // {
+        //     "client_id": req.client_id,
+        //     "api_key": req.api_key,
+        //     "recipient_name": req.recipient_name,
+        //     "recipient_contact_no": req.recipient_contact_no,
+        //     "recipient_address": req.recipient_address,
+        //     "recipient_city": req.recipient_city,
+        //     "parcel_type": req.parcel_type,
+        //     "parcel_description": req.parcel_description,
+        //     "cod_amount": req.cod_amount,
+        //     "order_id": req.order_id,
+        //     "exchange": req.exchange
+        // }
+
+    axios({
+            method: "post",
+            url: "https://fardardomestic.com/api/p_request_v1.02.php",
+            data: bodyFormData,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': '*/*',
+                'Host': '<calculated when request is sent>',
+                'User-Agent': 'request'
+            },
+        })
+        .then(function(response) {
+            //handle success
+            console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", response);
+        })
+        .catch(function(response) {
+            //handle error
+            console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", response);
+        });
+}
+
+const sendToDelivery1 = (req, res) => {
+    console.log("sendToDelivery", req)
     const apiPath = 'https://fardardomestic.com/api/p_request_v1.02.phps';
     const options = {
         url: 'https://fardardomestic.com/api/p_request_v1.02.php',

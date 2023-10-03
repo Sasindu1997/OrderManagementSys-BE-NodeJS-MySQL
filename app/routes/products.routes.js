@@ -12,6 +12,9 @@ module.exports = app => {
     // Retrieve all published Tutorials
     router.get("/published", products.findAllPublished);
 
+    // Retrieve all by category
+    router.get("/category/:id", products.findAllByCategoryId);
+
     // Retrieve a single Tutorial with id
     router.get("/:id", products.findOne);
 

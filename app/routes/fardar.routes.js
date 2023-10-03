@@ -18,5 +18,8 @@ module.exports = app => {
     // Retrieve a single Tutorial with id
     // router.get("/:id", users.findOne);
 
+    //https://app.capitaloneskincare.com/api/sendToDelivery/
+    //http://localhost:8080/api/sendToDelivery
+
     app.use('/api/sendToDelivery', router);
 };
