@@ -93,6 +93,11 @@ module.exports = (sequelize, Sequelize) => {
         remark: {
             type: Sequelize.STRING
         },
+        updatedDate: {
+            type: Sequelize.DATE,
+            defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+            allowNull: true
+        },
     });
 
     return OOrder;

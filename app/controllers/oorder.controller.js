@@ -209,6 +209,7 @@ exports.create = async(req, res) => {
                 supplierId: req.body.supplierId ?  req.body.supplierId : '0',
                 remark: req.body.remark, 
                 isActive: req.body.isActive ? req.body.isActive : false,
+                createdAt: req.body.createdAt
             };
         
             // Save Orderr in the database
@@ -620,7 +621,7 @@ exports.searchByCusPhone = (phn, res) => {
 // Update a Orderr by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
-
+    console.log(req.body)
     Orderr.update(req.body, {
             where: { id: id }
         })
@@ -1201,6 +1202,13 @@ exports.multipleSearch = (req, res) => {
     const supplierName = req.query.supplier;
     const status = req.query.status;
     const trackingNumber = req.query.trackingNo;
+    const createdAt = req.query.createdAt;
+    const endDate = req.query.endDate;
+
+    
+    const d1 = `${createdAt}T00:00:00.000Z`;
+    const d2 = `${endDate}T00:00:00.000Z`;
+
     const id = req.query.id;
 
     var condition = {
@@ -1219,6 +1227,9 @@ exports.multipleSearch = (req, res) => {
         trackingNumber: {
             [Op.like]: `%${trackingNumber}%`
         },
+        createdAt : { 
+            [Op.between]: [d1,d2]
+          },
         id: {
             [Op.like]: `%${id}%`
         }
@@ -1232,6 +1243,69 @@ exports.multipleSearch = (req, res) => {
     
     console.log("######################################################", condition)
 
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", element._previousDataValues.productDetails[j])
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = '',
+                            dt && dt.dataValues ? element.dataValues.ccfullName = dt.dataValues.fullName : element.dataValues.ccfullName = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
+            });
+        });
+};
+
+exports.findAllBySupplier = (req, res) => {
+    const supplierId = req.params.id;
+    var condition = supplierId ? {
+        supplierId: `${supplierId}`
+    } : null;
 
     Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
         .then(async data => {

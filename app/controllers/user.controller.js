@@ -21,7 +21,8 @@ exports.create = (req, res) => {
         role: req.body.role,
         phoneNumber: req.body.phoneNumber,
         address: req.body.address,
-        isActive: req.body.isActive ? req.body.isActive : false
+        isActive: req.body.isActive ? req.body.isActive : false,
+        createdAt: req.body.createdAt
     };
 
     // Save Users in the database

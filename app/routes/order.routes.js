@@ -9,6 +9,8 @@ module.exports = app => {
     // Retrieve all Tutorials
     router.get("/", orders.findAll);
 
+    router.get("/findAllBySupplier/:id", orders.findAllBySupplier);
+
     router.get("/multipleSearch", orders.multipleSearch);
 
     router.get("/returned", orders.findAllReturned);

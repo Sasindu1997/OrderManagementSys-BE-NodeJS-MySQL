@@ -19,6 +19,7 @@ exports.create = (req, res) => {
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
+    console.log(category)
     // Save Category in the database
     Category.create(category)
         .then(data => {

@@ -17,6 +17,7 @@ exports.create = (req, res) => {
         name: req.body.name,
         description: req.body.description,
         amount: req.body.amount,
+        createdAt: req.body.createdAt,
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
@@ -162,7 +163,7 @@ exports.multipleSearch = (req, res) => {
         condition = `WHERE utilities.createdAt >= '${startDate}' AND utilities.createdAt <= '${endDate}'`   
     }
     else if(startDate){
-        condition = `WHERE utilities.createdAt >='${startDate}'`   
+        condition = `WHERE utilities.createdAt >= '${startDate}'`   
     }
     else if(endDate){
         condition = `WHERE utilities.createdAt <= '${endDate}'`   

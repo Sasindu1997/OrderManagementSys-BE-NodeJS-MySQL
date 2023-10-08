@@ -18,6 +18,7 @@ exports.create = (req, res) => {
         name: req.body.name,
         description: req.body.description,
         amount: req.body.amount,
+        createdAt: req.body.createdAt,
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
@@ -185,18 +186,22 @@ exports.multipleSearch = (req, res) => {
     var condition = ''
 
     if(name && startDate && endDate){
-    console.log(name , startDate , endDate)
-
         condition = `WHERE expenses.name = ${name} AND expenses.createdAt >= '${startDate}' AND expenses.createdAt <= '${endDate}'`   
     }
     if(!name && startDate && endDate){
         condition = `WHERE expenses.createdAt >= '${startDate}' AND expenses.createdAt <= '${endDate}'`   
     }
-    else if(startDate){
-        condition = `WHERE expenses.name = ${name} AND expenses.createdAt >='${startDate}'`   
+    else if(name && startDate){
+        condition = `WHERE expenses.name = ${name} AND expenses.createdAt >= '${startDate}'`   
     }
-    else if(endDate){
+    else if(!name && startDate){
+        condition = `WHERE expenses.createdAt >= '${startDate}'`   
+    }
+    else if(name && endDate){
         condition = `WHERE expenses.name = ${name} AND expenses.createdAt <= '${endDate}'`   
+    }
+    else if(!name && endDate){
+        condition = `WHERE expenses.createdAt <= '${endDate}'`   
     }
     else if(name){
         condition = `WHERE expenses.name = ${name}`   
