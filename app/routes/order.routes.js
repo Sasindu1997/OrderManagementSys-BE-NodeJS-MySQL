@@ -13,6 +13,8 @@ module.exports = app => {
 
     router.get("/multipleSearch", orders.multipleSearch);
 
+    router.get("/multipleSearchDash", orders.multipleSearchDash);
+
     router.get("/returned", orders.findAllReturned);
 
     router.get("/cancelled", orders.findAllCancelled);

@@ -1,3 +1,5 @@
+"use strict";
+var sequelize = require("sequelize");
 const db = require("../models");
 const Orderr = db.oorders;
 const Op = db.Sequelize.Op;
@@ -1298,6 +1300,69 @@ exports.multipleSearch = (req, res) => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving orders."
             });
+        });
+};
+
+exports.multipleSearchDash = (req, res) => {
+
+    const customerId = req.query.customerId;
+    const cusName = req.query.customerName;
+    const cusPhone = req.query.customerPhone;
+    const supplierName = req.query.supplier;
+    const status = req.query.status;
+    const trackingNumber = req.query.trackingNo;
+    const createdAt = req.query.createdAt;
+    const endDate = req.query.endDate;
+    
+    const d1 = `${createdAt}T00:00:00.000Z`;
+    const d2 = `${endDate}T00:00:00.000Z`;
+
+    const id = req.query.id;
+
+    var condition = {
+        cusName: {
+            [Op.like]: `%${cusName}%`
+        },
+        cusPhone: {
+            [Op.like]: `%${cusPhone}%`
+        },
+        supplierName: {
+            [Op.like]: `%${supplierName}%`
+        },
+        status:{
+            [Op.like]: `%${status}%`
+        },
+        trackingNumber: {
+            [Op.like]: `%${trackingNumber}%`
+        },
+        createdAt : { 
+            [Op.between]: [d1,d2]
+          },
+        id: {
+            [Op.like]: `%${id}%`
+        }
+    };
+
+    for (const key in condition) {
+        if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
+            delete condition[key];
+        }
+    }
+    
+    console.log("######################################################", condition)
+    let dataArr2 = {}
+
+    Orderr.findAll({
+        attributes: [
+          [sequelize.fn('sum', sequelize.col('total')), 'sum'],
+        ],
+        where : condition
+      })
+        .then(data => {
+            res.send(data);
+        })
+        .catch((err) => {
+            console.log(err);
         });
 };
 
