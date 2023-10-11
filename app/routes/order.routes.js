@@ -15,6 +15,8 @@ module.exports = app => {
 
     router.get("/multipleSearchDash", orders.multipleSearchDash);
 
+    router.get("/multipleSearchDashProd", orders.multipleSearchDashProd);
+
     router.get("/returned", orders.findAllReturned);
 
     router.get("/cancelled", orders.findAllCancelled);

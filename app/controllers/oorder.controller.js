@@ -1366,6 +1366,107 @@ exports.multipleSearchDash = (req, res) => {
         });
 };
 
+exports.multipleSearchDashProd = async (req, res) => {
+
+    const customerId = req.query.customerId;
+    const cusName = req.query.customerName;
+    const cusPhone = req.query.customerPhone;
+    const supplierName = req.query.supplier;
+    const status = req.query.status;
+    const trackingNumber = req.query.trackingNo;
+    const createdAt = req.query.createdAt;
+    const endDate = req.query.endDate;
+    
+    const d1 = `${createdAt}T00:00:00.000Z`;
+    const d2 = `${endDate}T00:00:00.000Z`;
+
+
+
+    const id = req.query.id;
+    const prid = req.query.prid;
+
+
+    var condition = {
+        cusName: {
+            [Op.like]: `%${cusName}%`
+        },
+        cusPhone: {
+            [Op.like]: `%${cusPhone}%`
+        },
+        supplierName: {
+            [Op.like]: `%${supplierName}%`
+        },
+        status:{
+            [Op.like]: `%${status}%`
+        },
+        trackingNumber: {
+            [Op.like]: `%${trackingNumber}%`
+        },
+        id: {
+            [Op.like]: `%${id}%`
+        }
+    };
+
+    let dateCondition = `And createdAt BETWEEN '${d1}' AND '${d2}'`;
+
+    for (const key in condition) {
+        if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
+            delete condition[key];
+        }
+    }
+
+   // Build the WHERE clause dynamically
+   const sqlConditions = [];
+
+   for (const key in condition) {
+     if (condition[key]) {
+       const value = condition[key][Op.like];
+       sqlConditions.push(`${key} LIKE '${value}'`);
+     }
+   }
+   
+   // Join the conditions with 'AND' to build the SQL WHERE clause
+   const whereClause = sqlConditions.join(' AND ');
+
+    console.log("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",whereClause, d1, d2);
+    
+    console.log("######################################################", condition)
+    let dataArr2 = {}
+
+        try {
+          // Define your SQL query
+          const query = `
+          SELECT
+    SUM(json_data.prc) AS total_prc
+FROM
+    orderman.oorders,
+    JSON_TABLE(
+        orderman.oorders.productDetails,
+        '$[*]'
+        COLUMNS (
+            prc DECIMAL(10, 2) PATH '$.prc',
+            prid INT PATH '$.prid'
+        )
+    ) AS json_data
+WHERE
+    json_data.prid = 2 ${dateCondition} AND ${whereClause} ;`;
+
+          
+
+          // Execute the query
+          const [results] = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
+      
+          // Access the sum of 'prc' values
+          const totalPrc = results.total_prc;
+          console.log('Total prc where prid is 5:', totalPrc);
+          res.send(totalPrc);
+
+        } catch (error) {
+          console.error('Error:', error);
+          res.send(error);
+        } 
+};
+
 exports.findAllBySupplier = (req, res) => {
     const supplierId = req.params.id;
     var condition = supplierId ? {
