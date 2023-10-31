@@ -40,6 +40,7 @@ db.utilityExpenses = require("./utilityExpenses.model.js")(sequelize, Sequelize)
 db.income = require("./income.model.js")(sequelize, Sequelize);
 db.chemicals = require("./chemicals.model.js")(sequelize, Sequelize);
 db.deliveryOptions = require("./deliveryOptions.mode.js")(sequelize, Sequelize);
+db.itemSuppliers = require("./itemSuppliers.model.js")(sequelize, Sequelize);
 
 db.products.hasMany(db.orderrs, { foreignKey: 'orderId', targetKey: 'id' });
 db.users.hasMany(db.orderrs, { foreignKey: 'orderId', targetKey: 'id' });

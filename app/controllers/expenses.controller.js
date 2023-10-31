@@ -1,6 +1,7 @@
 const db = require("../models");
 const Expense = db.expenses;
 const expenseStream = db.expenseStream;
+const itemSuppliers = db.itemSuppliers;
 const Op = db.Sequelize.Op;
 
 // Create and Save a new Expense
@@ -18,6 +19,8 @@ exports.create = (req, res) => {
         name: req.body.name,
         description: req.body.description,
         amount: req.body.amount,
+        supplierId: req.body.supplierId,
+        paymentMethod: req.body.paymentMethod,
         createdAt: req.body.createdAt,
         isActive: req.body.isActive ? req.body.isActive : false
     };
@@ -49,7 +52,10 @@ exports.findAll = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element && element.dataValues && await expenseStream.findByPk(element.dataValues.name).then(dt => {
-                            dt && dt.dataValues ? element.dataValues.expenseStream = dt.dataValues.name : element.dataValues.incomeStream = ''
+                            dt && dt.dataValues ? element.dataValues.expenseStream = dt.dataValues.name : element.dataValues.expenseStream = ''
+                        })
+                    element && element.dataValues && await itemSuppliers.findByPk(element.dataValues.supplierId).then(dt => {
+                            dt && dt.dataValues ? element.dataValues.itemSupplier = dt.dataValues.name : element.dataValues.itemSupplier = ''
                         })
                 }
             }
