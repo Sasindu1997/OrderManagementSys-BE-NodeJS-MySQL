@@ -66,6 +66,7 @@ require("./app/routes/expenseStream.routes")(app);
 require("./app/routes/chemStream.routes")(app);
 require("./app/routes/rawStream.routes")(app);
 require("./app/routes/itemSuppliers.routes")(app);
+require("./app/routes/barcode.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;

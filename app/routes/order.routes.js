@@ -15,6 +15,8 @@ module.exports = app => {
 
     router.get("/multipleSearchC", orders.multipleSearchC);
 
+    router.get("/multipleSearchReport", orders.multipleSearchReport);
+
     router.get("/multipleSearchDash", orders.multipleSearchDash);
 
     router.get("/multipleSearchDashProd", orders.multipleSearchDashProd);
@@ -33,11 +35,11 @@ module.exports = app => {
     // Retrieve a single Tutorial with id
     router.get("/:id", orders.findOne);
 
-     // Retrieve a single order by supplierid
-     router.get("/supplier/get/:id", orders.getOrdersBySupplierId2);
+    // Retrieve a single order by supplierid
+    router.get("/supplier/get/:id", orders.getOrdersBySupplierId2);
 
     // Retrieve a single Tutorial with id
-    router.get("/barcode/:barcode", orders.findOneByBarcode);
+    router.get("/barcodes", orders.searchTwo);
 
     // Retrieve a single Tutorial with id
     router.get("/:searchSelect/:searchvalue", orders.searchBy);

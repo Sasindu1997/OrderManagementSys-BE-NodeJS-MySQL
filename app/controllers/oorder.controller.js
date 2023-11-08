@@ -491,6 +491,8 @@ exports.findOneLocal = (id, res) => {
 };
 
 exports.findOneByBarcode = (req, res) => {
+    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
     const barcode = req.params.barcode;
     console.log("sssssssssssssssssssssssssss", req.params.barcode)
     var condition = barcode ? {
@@ -556,6 +558,75 @@ exports.findOneByBarcode = (req, res) => {
             });
         });
 };
+
+exports.findOneByBarcodes = (req, res) => {
+    const barcode = req.params.id;
+    console.log("sssssssssssssssssssssssssss", req.params.id)
+    var condition = barcode ? {
+        barcode: barcode
+    } : null;
+
+    Orderr.findOne({ where: condition })
+        .then(async data => {
+            console.log("12258213", data)
+            if (data) {
+                if (data) {
+                    data.dataValues.productData = []
+                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                    for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
+                        console.log("****************************", data._previousDataValues.productDetails[j])
+                        await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && data.dataValues.productData.push({
+                                pId: data._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: data._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+                    data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
+                        console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues.fullName)
+
+                        dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
+                            dt && dt.dataValues ? data.dataValues.cphone = dt.dataValues.phone : data.dataValues.cphone = '',
+                            dt && dt.dataValues ? data.dataValues.caddress = dt.dataValues.address : data.dataValues.caddress = '',
+                            dt && dt.dataValues ? data.dataValues.cdistrict = dt.dataValues.district : data.dataValues.cdistrict = '',
+                            dt && dt.dataValues ? data.dataValues.ccfullName = dt.dataValues.fullName : data.dataValues.ccfullName = ''
+
+                    })
+                    data && data.dataValues && await Users.findByPk(data.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? data.dataValues.ufullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
+                            dt && dt.dataValues ? data.dataValues.uemail = dt.dataValues.email : data.dataValues.uemail = '',
+                            dt && dt.dataValues ? data.dataValues.urole = dt.dataValues.role : data.dataValues.urole = '',
+                            dt && dt.dataValues ? data.dataValues.uphoneNumber = dt.dataValues.phoneNumber : data.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? data.dataValues.uaddress = dt.dataValues.address : data.dataValues.uaddress = ''
+                    })
+                }
+                res.send(data);
+            } else {
+                res.status(404).send({
+                    message: `Cannot find Orderr with barcode=${barcode}.`
+                });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: "Error retrieving Orderr with barcode=" + barcode
+            });
+        });
+};
+
+exports.searchTwo = (req, res) => {};
 
 exports.searchBy = (req, res) => {
     console.log(req.params)
@@ -1367,6 +1438,147 @@ exports.multipleSearch = (req, res) => {
         });
 };
 
+exports.multipleSearchReport = async (req, res) => {
+    console.log("#######", req.query)
+    const customerId = req.query.customerId;
+    const cusName = req.query.customerName;
+    const cusPhone = req.query.customerPhone;
+    const supplierName = req.query.supplier;
+    const status = req.query.status;
+    const trackingNumber = req.query.trackingNo;
+    const createdAt = req.query.createdAt;
+    const endDate = req.query.endDate;
+    const id = req.query.id;
+    const prid = req.query.productId;
+    const categoryId = req.query.categoryId;
+
+    
+    const d1 = `${createdAt}T00:00:00.000Z`;
+    const d2 = `${endDate}T00:00:00.000Z`;
+  
+    var condition = {
+        cusName: {
+            [Op.like]: `%${cusName}%`
+        },
+        cusPhone: {
+            [Op.like]: `%${cusPhone}%`
+        },
+        supplierName: {
+            [Op.like]: `%${supplierName}%`
+        },
+        status:{
+            [Op.like]: `%${status}%`
+        },
+        trackingNumber: {
+            [Op.like]: `%${trackingNumber}%`
+        },
+        id: {
+            [Op.like]: `%${id}%`
+        }
+    };
+
+    let dateCondition = categoryId || prid ? `And orderman.oorders.createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
+    let prCondition = prid ? `json_data.prid = ${prid}` : '';
+    let catCondition = prid && categoryId ? '' : !prid && categoryId ? `json_data.prcat = ${categoryId}` : '';
+
+    for (const key in condition) {
+        if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
+            delete condition[key];
+        }
+    }
+
+   // Build the WHERE clause dynamically
+   const sqlConditions = [];
+
+   for (const key in condition) {
+    console.log("11111111111111111111111", condition)
+     if (condition[key]) {
+       const value = condition[key][Op.like];
+       sqlConditions.push(`${key} LIKE '${value}'`);
+     }
+   }
+   
+   // Join the conditions with 'AND' to build the SQL WHERE clause
+   const whereClause = sqlConditions.join(' AND ');
+   let finalWhere = ''
+   if(sqlConditions.length > 0){
+    finalWhere = `AND ${whereClause}`
+   } else {
+    finalWhere = whereClause
+   }
+
+    console.log("######################################################", condition)
+    let dataArr2 = {}
+
+        try {
+          // Define your SQL query
+          const query = `SELECT
+          oorders.* -- Select all columns from oorders
+      FROM
+          orderman.oorders
+      WHERE
+          oorders.id IN (
+              SELECT
+                  oorders.id
+              FROM
+                  orderman.oorders
+              JOIN
+                  JSON_TABLE(
+                      oorders.productDetails,
+                      '$[*]'
+                      COLUMNS (
+                          prid INT PATH '$.prid'
+                      )
+                  ) AS json_data
+             
+              WHERE
+                  ${catCondition} ${prCondition} ${dateCondition}  ${finalWhere} 
+          )
+      ORDER BY
+          oorders.createdAt DESC;`;
+
+          // Execute the query
+          const data = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
+          async function addData() {
+            for (let index = 0; index < data.length; index++) {
+                const element = data[index];
+                console.log(element)
+
+                element.productData = []
+                    // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
+                for (let j = 0; j < element.productDetails.length; j++) {
+                    console.log("****************************", element.productDetails[j])
+                    await Products.findByPk(element.productDetails[j].prid).then(dt => {
+
+                        dt && dt.dataValues && element.productData.push({
+                            pId: element.productDetails[j].prid,
+                            pName: dt.dataValues.productName,
+                            pCode: dt.dataValues.productCode,
+                            pdescription: dt.dataValues.description,
+                            pprice: dt.dataValues.price,
+                            pcategoryId: dt.dataValues.categoryId,
+                            psubCategoryId: dt.dataValues.subCategoryId,
+                            pbrand: dt.dataValues.brand,
+                            pvolume: dt.dataValues.volume,
+                            ptype: dt.dataValues.type,
+                            ocount: element.productDetails[j].prc,
+
+                        })
+                    })
+                }
+            }
+        }
+        await addData();
+          res.send(data);
+
+
+        } catch (error) {
+          console.error('Error:', error);
+          res.send(error);
+        } 
+   
+};
+
 exports.multipleSearchC = (req, res) => {
     const customerId = req.query.customerId;
     const cusName = req.query.customerName;
@@ -1718,8 +1930,8 @@ exports.multipleSearchOrderCount = async (req, res) => {
         }
     };
 
-    let dateCondition = prid ? `And createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
-    // let prCondition = prid ? `json_data.prid = ${prid}` : '';
+    let dateCondition = prid ? `AND createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
+    let prCondition = prid ? `json_data.prid = ${prid}` : '';
 
     for (const key in condition) {
         if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
@@ -1746,19 +1958,31 @@ exports.multipleSearchOrderCount = async (req, res) => {
     finalWhere = whereClause
    }
 
-    console.log("multipleSearchOrderCount@@@@@@@@@@@@@",whereClause, d1, d2);
     
     let dataArr2 = {}
     //WHERE ${prCondition}  ${dateCondition} ${finalWhere} 
         try {
           // Define your SQL query
           const query = `
-          SELECT count(id) as Count FROM orderman.oorders 
+          SELECT
+            count(orderman.oorders.id) as Count
+        FROM
+            orderman.oorders,
+            JSON_TABLE(
+                orderman.oorders.productDetails,
+                '$[*]'
+                COLUMNS (
+                    prc DECIMAL(10, 2) PATH '$.prc',
+                    prid INT PATH '$.prid'
+                )
+            ) AS json_data
+        WHERE
+            ${prCondition} ${dateCondition} ${finalWhere} 
         ORDER BY orderman.oorders.createdAt DESC;`;
+
 
           // Execute the query
           const [results] = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
-    console.log("multipleSearchOrderCount#####################", results)
       
           // Access the sum of 'prc' values
           res.send(results);
