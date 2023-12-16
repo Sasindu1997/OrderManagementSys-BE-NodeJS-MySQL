@@ -27,5 +27,7 @@ module.exports = app => {
     // Delete all Tutorials
     router.delete("/", users.deleteAll);
 
+    router.get("/findAllBySupplier/:id", users.findAllBySupplier);
+
     app.use('/api/users', router);
 };

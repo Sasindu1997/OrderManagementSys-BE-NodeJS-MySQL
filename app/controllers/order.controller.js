@@ -38,7 +38,6 @@ exports.create = (req, res) => {
     Order.create(order)
         .then(data => {
             req.body.productDetails && req.body.productDetails.map(product => {
-                console.log(product, product.prId, product.count)
                 updateStocksSingle(product.prId, product.count)
             })
             res.send(data);
@@ -96,13 +95,10 @@ exports.findAll = (req, res) => {
     Order.findAll({ where: condition })
         .then(async data => {
             async function addData() {
-                console.log(data)
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                    console.log("#########", element.dataValues.productDetails)
                     for (let j = 0; j < element.dataValues.productDetails.length; j++) {
-                        console.log("#########", element.dataValues.productDetails)
 
                         await Products.findByPk(element.dataValues.productId[j]).then(dt => {
 
@@ -205,7 +201,6 @@ exports.findOne = (req, res) => {
 
 exports.findOneByBarcode = (req, res) => {
     const barcode = req.params.barcode;
-    console.log("sssssssssssssssssssssssssss", req.params.barcode)
     var condition = barcode ? {
         barcode: barcode
     } : null;
@@ -262,7 +257,6 @@ exports.findOneByBarcode = (req, res) => {
 };
 
 exports.searchBy = (req, res) => {
-    console.log(req.params)
     const searchSelect = req.params.searchSelect;
     const searchvalue = req.params.searchvalue;
     const queryString = `SELECT * FROM orders INNER JOIN customers ON orders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}';`
@@ -368,7 +362,6 @@ exports.todayOrderCount = (req, res) => {
 
     Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -473,7 +466,6 @@ exports.getAllProductOrders = (req, res) => {
 
     Order.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -488,7 +480,6 @@ exports.newCustomersCount = (req, res) => {
 
     Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -505,7 +496,6 @@ exports.updateStocks = (id, count, req, res) => {
 
     Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res(data);
         })
         .catch((err) => {
@@ -516,14 +506,12 @@ exports.updateStocks = (id, count, req, res) => {
 };
 
 exports.updateStocksSingle = (id, count) => {
-    console.log("ppppppppppppppppppppppppppppppppppppppppppp")
     const queryString = `UPDATE orderman.products
                         SET products.maxStockLevel = products.maxStockLevel - '${count}'
                         WHERE products.id = '${id}';`
 
     Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res(data);
         })
         .catch((err) => {

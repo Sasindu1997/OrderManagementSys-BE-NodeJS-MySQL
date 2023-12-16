@@ -33,13 +33,9 @@ db.sequelize.sync()
         console.log("Failed to sync db: " + err.message);
     });
 
-// db.sequelize.sync({ force: true }).then(() => {
-//     console.log("Drop and re-sync db.");
-// });
-
-// simple route
+// simple test route
 app.get("/", (req, res) => {
-    res.json({ message: "Welcome to Zenode application." });
+    res.json({ message: "Welcome." });
 });
 
 //routes

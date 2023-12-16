@@ -12,7 +12,6 @@ var store = require('store')
 const axios = require("axios");
 
 const sendToDelivery2 = async(req, res) => {
-    console.log("**********************************************************************", req)
     const options = {
         url: 'http://fardardomestic.com/api/p_request_v1.02.php',
         method: 'POST',
@@ -40,14 +39,11 @@ const sendToDelivery2 = async(req, res) => {
 
     await axios(options)
         .then(response => {
-            console.log("---------------------------------------------", response);
         }).catch(error => {
-            console.log(error);
         });
 };
 
 const sendToDelivery = async (req) => {
-    console.log(req)
     let data = new FormData();
     // data.append('api_key', 'api64f549a9bcb3d');
     // data.append('recipient_name', 'customer 2');
@@ -86,11 +82,9 @@ const sendToDelivery = async (req) => {
     
     await axios.request(config)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
       return response.data; 
     })
     .catch((error) => {
-      console.log(error);
       return error;
     });
     
@@ -101,18 +95,14 @@ exports.create = async(req, res) => {
     let deliveryData = {};
     let customerData = {}
     const sendSMS = (mask, numbers) => {
-        console.log("numbers", mask, numbers)
         const res = SMSController.login();
         res.then(data => {
             store.set('sms', { accessToken: `${data.data.accessToken}` })
             const resSMS = SMSController.sendSMS(mask, numbers);
-            console.log("resSMS", resSMS)
         })
     }
 
-    console.log("req.body.orderId", req.body.orderId)
 
-    console.log(req.body)
         // Validate request
     if (!req.body.productDetails, !req.body.total, !req.body.customerId) {
         res.status(400).send({
@@ -128,7 +118,6 @@ exports.create = async(req, res) => {
     }
     if (req.body.customerId) {
         customerData = await Customers.findByPk(req.body.customerId);
-        console.log(customerData.dataValues, deliveryData)
     }
     // req.body.isDeliveryAdded
     // req.body.deliveryId
@@ -167,7 +156,6 @@ exports.create = async(req, res) => {
 
                 // //update stocks
                 // req.body.productDetails && req.body.productDetails.map(product => {
-                //     console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
                 //     OrderController.updateStocksSingle(product.prid, product.prc)
                 // })
 
@@ -175,7 +163,6 @@ exports.create = async(req, res) => {
 
                 // Send to Delivery
                 const sendResFrmsendToDelivery = async(value) => {
-                    console.log("sendResFrmsendToDelivery", value);
                 };
 
                 deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
@@ -251,9 +238,7 @@ exports.findAll = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -310,9 +295,7 @@ exports.findOne = (req, res) => {
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -332,7 +315,6 @@ exports.findOne = (req, res) => {
                         })
                     }
                     data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        // console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues.fullName)
 
                         dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
                             dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
@@ -370,9 +352,7 @@ exports.findOneLocal = (id, res) => {
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -423,20 +403,16 @@ exports.findOneLocal = (id, res) => {
 
 exports.findOneByBarcode = (req, res) => {
     const barcode = req.params.barcode;
-    console.log("sssssssssssssssssssssssssss", req.params.barcode)
     var condition = barcode ? {
         barcode: barcode
     } : null;
 
     Orderr.findOne({ where: condition })
         .then(async data => {
-            console.log("12258213", data)
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -456,7 +432,6 @@ exports.findOneByBarcode = (req, res) => {
                         })
                     }
                     data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues.fullName)
 
                         dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
                             dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
@@ -489,7 +464,6 @@ exports.findOneByBarcode = (req, res) => {
 };
 
 exports.searchBy = (req, res) => {
-    console.log(req.params)
     const searchSelect = req.params.searchSelect;
     const searchvalue = req.params.searchvalue;
     const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}' ORDER BY orderrs.id DESC;`
@@ -500,10 +474,8 @@ exports.searchBy = (req, res) => {
         .then(async data => {
             async function addData() {
                 for (let element of data) {
-                    console.log("666666666666666666666666666", element)
                     element.productData = []
                     for (let j = 0; j < element.productDetails.length; j++) {
-                        console.log("****************************", element.productDetails[j])
                         await Products.findByPk(element.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.productData.push({
@@ -550,7 +522,6 @@ exports.searchBy = (req, res) => {
 
 exports.searchByCusPhone = (phn, res) => {
     const queryString = `SELECT * FROM orderrs INNER JOIN customers ON orderrs.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
-    console.log("---------------------------", queryString)
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
         .catch((err) => {
@@ -642,7 +613,6 @@ exports.todayOrderrCount = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -747,7 +717,6 @@ exports.getAllProductOrderrs = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -762,7 +731,6 @@ exports.newCustomersCount = (req, res) => {
 
     Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -779,7 +747,6 @@ exports.updateStocks = (id, count, req, res) => {
 
     Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.UPDATE })
         .then(data => {
-            console.log("9999999999999999", data)
             res(data);
         })
         .catch((err) => {
@@ -790,17 +757,14 @@ exports.updateStocks = (id, count, req, res) => {
 };
 
 exports.updateStocksSingle = (id, count) => {
-    console.log("ppppppppppppppppppppppppppppppppppppppppppp", id, count)
     const queryString = `UPDATE orderman.products
                         SET products.maxStockLevel = products.maxStockLevel - '${count}'
                         WHERE products.id = '${id}';`
 
     id && count && Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
         })
         .catch((err) => {
-            console.log(err)
         });
 };
 
@@ -817,9 +781,7 @@ exports.findAllReturned = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -879,9 +841,7 @@ exports.findAllCancelled = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -929,7 +889,6 @@ exports.findAllCancelled = (req, res) => {
 };
 
 exports.cancelOrder = (req, res) => {
-    console.log(req.body.isChecked)
     const queryString = `UPDATE orderman.orderrs
         SET orderrs.status = 'Cancelled'
         WHERE orderrs.id = '${req.params.id}';`
@@ -937,7 +896,6 @@ exports.cancelOrder = (req, res) => {
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
             req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -955,7 +913,6 @@ exports.returnOrder = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
-            console.log(data)
             req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
             res.send(data);
         })
@@ -974,21 +931,17 @@ exports.updateStocksReturned = (id, count) => {
     id && Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
             data[0] && data[0].productDetails && data[0].productDetails.map(prod => {
-                console.log("ppppppppppppppppppppppppppppppppppppppppppp", prod, prod.prid, prod.prc);
                 const queryString = `UPDATE orderman.products
                 SET products.maxStockLevel = products.maxStockLevel + '${prod.prc}'
                 WHERE products.id = '${prod.prid}';`
 
                 Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
                     .then(data => {
-                        console.log("reddddddddddddddddds", data)
                     })
                     .catch((err) => {
-                        console.log(err)
                     });
             })
         })
         .catch((err) => {
-            console.log(err)
         });
 };

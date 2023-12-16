@@ -19,7 +19,6 @@ exports.create = (req, res) => {
         isActive: req.body.isActive ? req.body.isActive : false
     };
 
-    console.log(category)
     // Save Category in the database
     Category.create(category)
         .then(data => {
@@ -54,7 +53,6 @@ exports.findAll = (req, res) => {
 
 // Find a single Category with an id
 exports.findOne = (req, res) => {
-    console.log("req", req.params.id, res.send)
     const id = req.params.id;
 
     Category.findByPk(id)
@@ -69,8 +67,6 @@ exports.findOne = (req, res) => {
         })
         .catch(err => {
             console.log("err", err)
-            console.log("res", res)
-
             // res.status(500).send({
             //     message: "Error retrieving Category with id=" + id
             // });

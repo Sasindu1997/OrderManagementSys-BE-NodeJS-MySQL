@@ -71,7 +71,6 @@ exports.findOne = (req, res) => {
     SubCategories.findByPk(id)
         .then(async data => {
             if (data) {
-                console.log("data", data.dataValues.categoryId)
                 await Categories.findByPk(data.dataValues.categoryId).then(dt => {
                     data.dataValues.categoryTitle = dt.dataValues.title
                 })

@@ -74,7 +74,6 @@ exports.findAllThisMonth = (req, res) => {
 
     Expense.sequelize.query(queryString, { type: Expense.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -212,7 +211,6 @@ exports.multipleSearch = (req, res) => {
     else if(name){
         condition = `WHERE expenses.name = ${name}`   
     }
-    console.log("######################################################", condition)
 
     const queryString = `SELECT * FROM orderman.expenses ${condition} ORDER BY id DESC;`
     Expense.sequelize.query(queryString, { type: Expense.sequelize.QueryTypes.SELECT })
@@ -220,7 +218,6 @@ exports.multipleSearch = (req, res) => {
         async function addData() {
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                console.log("element", element);
                 element && await expenseStream.findByPk(element.name).then(dt => {
                         dt && dt.dataValues ? element.expenseStream = dt.dataValues.name : element.incomeStream = ''
                     })

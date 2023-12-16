@@ -25,7 +25,6 @@ exports.create = async(req, res) => {
     let supplierData = {};
     let newInvoiceNumber = false;
     const sendSMS = (mask, numbers, smsbody) => {
-        console.log("numbers", mask, numbers)
         const res = SMSController.login();
         res.then(data => {
             store.set('sms', { accessToken: `${data.data.accessToken}` })
@@ -35,13 +34,10 @@ exports.create = async(req, res) => {
 
     const sendResFrmLat = async(value) => {
         newInvoiceNumber = value.length > 0 ? parseInt(value[0].invoiceNumber) + 1 : '000001'; 
-        // console.log("sendResFrmLat ", value[0].invoiceNumber + 1, newInvoiceNumber)
     };
     let resL = await OrderController.getLatestRec({}, sendResFrmLat);
 
-    console.log("req.body.orderId", req.body.orderId)
-
-        // Validate request
+    // Validate request
     if (!req.body.productDetails, !req.body.total, !req.body.fullName, !req.body.phone, !req.body.address) {
         res.status(400).send({
             message: "Content can not be empty!"
@@ -61,14 +57,12 @@ exports.create = async(req, res) => {
 
     if (req.body.deliveryId) {
         const send = async(value) => {
-            console.log("iiiiiiiiiiiiiiiiiiiiiiii", value.dataValues)
             deliveryData = value ? value.dataValues ? value.dataValues : {} : {};
         }
         let res = await delivery.findOneBE({ params: { id: req.body.deliveryId } }, send);
     }
     if (req.body.phone) {
         const sendResFrmMobileNo = async(value) => {
-            console.log("[sendResFrmLat] ", value[0] && value[0].dataValues && value[0].dataValues.id)
             customerId = value[0] && value[0].dataValues && value[0].dataValues.id
             customerData = value[0] && value[0].dataValues
             if(value[0] && value[0].dataValues && value[0].dataValues.id){
@@ -114,7 +108,6 @@ exports.create = async(req, res) => {
                         if (data) {
                             // update stocks
                             req.body.productDetails && req.body.productDetails.map(product => {
-                                console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
                                 OrderController.updateStocksSingle(product.prid, product.prc)
                             })
 
@@ -123,7 +116,6 @@ exports.create = async(req, res) => {
 
                             // Send to Delivery
                             // const sendResFrmsendToDelivery = async(value) => {
-                            //     console.log("sendResFrmsendToDelivery", value);
                             // };
 
                             // deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
@@ -162,8 +154,6 @@ exports.create = async(req, res) => {
             // Save Customer in the database
             Customers.create(customer)
                 .then(async data => {
-                    console.log("-----------------------------------------------------------------")
-                    console.log(data.dataValues.id)
                     customerId = data.dataValues.id
                 
                     // Create a Orderr
@@ -208,7 +198,6 @@ exports.create = async(req, res) => {
                             if (data) {
                                 // update stocks
                                 req.body.productDetails && req.body.productDetails.map(product => {
-                                    console.log("ppppppppppppppppppppp", product, product.prid, product.prc)
                                     OrderController.updateStocksSingle(product.prid, product.prc)
                                 })
                 
@@ -217,7 +206,6 @@ exports.create = async(req, res) => {
                 
                                 // Send to Delivery
                                 // const sendResFrmsendToDelivery = async(value) => {
-                                //     console.log("sendResFrmsendToDelivery", value);
                                 // };
                 
                                 // deliveryData && deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
@@ -311,9 +299,7 @@ exports.findAll = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -375,9 +361,7 @@ exports.findOne = (req, res) => {
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -396,8 +380,6 @@ exports.findOne = (req, res) => {
                         })
                     }
                     data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        // console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues)
-
                         dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
                             dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
                             dt && dt.dataValues ? data.dataValues.cphone = dt.dataValues.phone : data.dataValues.cphone = '',
@@ -439,9 +421,7 @@ exports.findOneLocal = (id, res) => {
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -491,23 +471,18 @@ exports.findOneLocal = (id, res) => {
 };
 
 exports.findOneByBarcode = (req, res) => {
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
     const barcode = req.params.barcode;
-    console.log("sssssssssssssssssssssssssss", req.params.barcode)
     var condition = barcode ? {
         barcode: barcode
     } : null;
 
     Orderr.findOne({ where: condition })
         .then(async data => {
-            console.log("12258213", data)
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -527,7 +502,6 @@ exports.findOneByBarcode = (req, res) => {
                         })
                     }
                     data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues.fullName)
 
                         dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
                             dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
@@ -561,20 +535,16 @@ exports.findOneByBarcode = (req, res) => {
 
 exports.findOneByBarcodes = (req, res) => {
     const barcode = req.params.id;
-    console.log("sssssssssssssssssssssssssss", req.params.id)
     var condition = barcode ? {
         barcode: barcode
     } : null;
 
     Orderr.findOne({ where: condition })
         .then(async data => {
-            console.log("12258213", data)
             if (data) {
                 if (data) {
                     data.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < data._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", data._previousDataValues.productDetails[j])
                         await Products.findByPk(data._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && data.dataValues.productData.push({
@@ -594,7 +564,6 @@ exports.findOneByBarcodes = (req, res) => {
                         })
                     }
                     data && data.dataValues && await Customers.findByPk(data.dataValues.customerId).then(dt => {
-                        console.log("]]]]]]]]]]]]]]]]]]]]]]]]]]]]", dt.dataValues.fullName)
 
                         dt && dt.dataValues ? data.dataValues.cfullName = dt.dataValues.fullName : data.dataValues.cfullName = '',
                             dt && dt.dataValues ? data.dataValues.cemail = dt.dataValues.email : data.dataValues.cemail = '',
@@ -629,7 +598,6 @@ exports.findOneByBarcodes = (req, res) => {
 exports.searchTwo = (req, res) => {};
 
 exports.searchBy = (req, res) => {
-    console.log(req.params)
     const searchSelect = req.params.searchSelect;
     const searchvalue = req.params.searchvalue;
     const queryString = `SELECT * FROM oorders INNER JOIN customers ON oorders.customerId = customers.id AND customers.${searchSelect} LIKE '%${searchvalue}' ORDER BY oorders.createdAt DESC;`
@@ -638,10 +606,8 @@ exports.searchBy = (req, res) => {
         .then(async data => {
             async function addData() {
                 for (let element of data) {
-                    console.log("666666666666666666666666666", element)
                     element.productData = []
                     for (let j = 0; j < element.productDetails.length; j++) {
-                        console.log("****************************", element.productDetails[j])
                         await Products.findByPk(element.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.productData.push({
@@ -688,7 +654,6 @@ exports.searchBy = (req, res) => {
 
 exports.searchByCusPhone = (phn, res) => {
     const queryString = `SELECT * FROM oorders INNER JOIN customers ON oorders.customerId = customers.id AND FIND_IN_SET('${phn}', customers.phone);`
-    console.log("---------------------------", queryString)
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(r => res(r))
         .catch((err) => {
@@ -699,7 +664,6 @@ exports.searchByCusPhone = (phn, res) => {
 // Update a Orderr by the id in the request
 exports.update = (req, res) => {
     const id = req.params.id;
-    console.log(req.body)
     Orderr.update(req.body, {
             where: { id: id }
         })
@@ -780,7 +744,6 @@ exports.todayOrderrCount = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -885,7 +848,6 @@ exports.getAllProductOrderrs = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -900,7 +862,6 @@ exports.newCustomersCount = (req, res) => {
 
     Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -917,7 +878,6 @@ exports.updateStocks = (id, count, req, res) => {
 
     Customers.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.UPDATE })
         .then(data => {
-            console.log("9999999999999999", data)
             res(data);
         })
         .catch((err) => {
@@ -928,17 +888,14 @@ exports.updateStocks = (id, count, req, res) => {
 };
 
 exports.updateStocksSingle = (id, count) => {
-    console.log("ppppppppppppppppppppppppppppppppppppppppppp", id, count)
     const queryString = `UPDATE orderman.products
                         SET products.maxStockLevel = products.maxStockLevel - '${count}'
                         WHERE products.id = '${id}';`
 
     id && count && Customers.sequelize.query(queryString, { type: Order.sequelize.QueryTypes.SELECT })
         .then(data => {
-            console.log(data)
         })
         .catch((err) => {
-            console.log('eeeeeeeerrrrrrrrrrrrrr', err)
         });
 };
 
@@ -955,9 +912,7 @@ exports.findAllReturned = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -1017,9 +972,7 @@ exports.findAllCancelled = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -1079,9 +1032,7 @@ exports.findAllExchanged = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -1129,7 +1080,6 @@ exports.findAllExchanged = (req, res) => {
 };
 
 exports.cancelOrder = (req, res) => {
-    console.log(req.body.isChecked)
     const queryString = `UPDATE orderman.oorders
         SET oorders.status = 'Cancelled'
         WHERE oorders.id = '${req.params.id}';`
@@ -1137,7 +1087,6 @@ exports.cancelOrder = (req, res) => {
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
             req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
-            console.log(data)
             res.send(data);
         })
         .catch((err) => {
@@ -1172,7 +1121,6 @@ exports.returnOrder = (req, res) => {
 
     Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
         .then(data => {
-            console.log(data)
             req.body.isChecked && OrderController.updateStocksReturned(req.params.id)
             res.send(data);
         })
@@ -1197,15 +1145,12 @@ exports.updateStocksReturned = (id, count) => {
 
                 Orderr.sequelize.query(queryString, { type: Orderr.sequelize.QueryTypes.update })
                     .then(data => {
-                        console.log("reddddddddddddddddds", data)
                     })
                     .catch((err) => {
-                        console.log(err)
                     });
             })
         })
         .catch((err) => {
-            console.log(err)
         });
 };
 
@@ -1216,16 +1161,12 @@ exports.getLatestRec = (req, res) => {
             res(data)
         })
         .catch((err) => {
-            console.log(err)
         });
 };
 
 //get orders by supplier id
 exports.getOrdersBySupplierId = (req, res) => {
 
-    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-    console.log(req.params.id)
-    console.log('checkingId')
 
 
     const queryString = `SELECT 
@@ -1376,7 +1317,6 @@ exports.multipleSearch = (req, res) => {
         }
     }
      
-    console.log("######################################################", condition)
 
     Orderr.findAndCountAll({
         limit: parseInt(limit),
@@ -1388,9 +1328,7 @@ exports.multipleSearch = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -1439,7 +1377,6 @@ exports.multipleSearch = (req, res) => {
 };
 
 exports.multipleSearchReport = async (req, res) => {
-    console.log("#######", req.query)
     const customerId = req.query.customerId;
     const cusName = req.query.customerName;
     const cusPhone = req.query.customerPhone;
@@ -1491,7 +1428,6 @@ exports.multipleSearchReport = async (req, res) => {
    const sqlConditions = [];
 
    for (const key in condition) {
-    console.log("11111111111111111111111", condition)
      if (condition[key]) {
        const value = condition[key][Op.like];
        sqlConditions.push(`${key} LIKE '${value}'`);
@@ -1507,7 +1443,6 @@ exports.multipleSearchReport = async (req, res) => {
     finalWhere = whereClause
    }
 
-    console.log("######################################################", condition)
     let dataArr2 = {}
 
         try {
@@ -1527,7 +1462,8 @@ exports.multipleSearchReport = async (req, res) => {
                       oorders.productDetails,
                       '$[*]'
                       COLUMNS (
-                          prid INT PATH '$.prid'
+                          prid INT PATH '$.prid',
+                          prcat INT PATH '$.prcat'
                       )
                   ) AS json_data
              
@@ -1542,12 +1478,9 @@ exports.multipleSearchReport = async (req, res) => {
           async function addData() {
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                console.log(element)
 
                 element.productData = []
-                    // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                 for (let j = 0; j < element.productDetails.length; j++) {
-                    console.log("****************************", element.productDetails[j])
                     await Products.findByPk(element.productDetails[j].prid).then(dt => {
 
                         dt && dt.dataValues && element.productData.push({
@@ -1573,7 +1506,6 @@ exports.multipleSearchReport = async (req, res) => {
 
 
         } catch (error) {
-          console.error('Error:', error);
           res.send(error);
         } 
    
@@ -1627,7 +1559,6 @@ exports.multipleSearchC = (req, res) => {
         }
     }
      
-    console.log("######################################################", condition)
 
     Orderr.findAll({
          where: condition, order: Orderr.sequelize.literal('id DESC') })
@@ -1637,9 +1568,7 @@ exports.multipleSearchC = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -1703,6 +1632,7 @@ exports.multipleSearchDash = async (req, res) => {
 
     const id = req.query.id;
     const prid = req.query.prid;
+    const categoryId = req.query.categoryId;
 
     var condition = {
         cusName: {
@@ -1725,8 +1655,10 @@ exports.multipleSearchDash = async (req, res) => {
         }
     };
 
-    let dateCondition = prid ? `And createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
-    let prCondition = prid ? `json_data.prid = ${prid}` : '';
+    let dateCondition = categoryId || prid ? `And orderman.oorders.createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
+    let prCondition = prid ? `JSON_EXTRACT(productDetails, '$[0].prid') = '${prid}'` : '';
+    let catCondition = prid && categoryId ? '' : 
+    !prid && categoryId ? `JSON_EXTRACT(productDetails, '$[0].prcat') = ${categoryId}` : '';
 
     for (const key in condition) {
         if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
@@ -1753,38 +1685,42 @@ exports.multipleSearchDash = async (req, res) => {
     finalWhere = whereClause
    }
 
-    console.log("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",whereClause, d1, d2);
     
-    console.log("######################################################", condition)
     let dataArr2 = {}
 
         try {
           // Define your SQL query
-          const query = `SELECT
-            SUM(subTotal) AS total_prc
-        FROM
-            orderman.oorders,
-            JSON_TABLE(
-                orderman.oorders.productDetails,
-                '$[*]'
-                COLUMNS (
-                    prc DECIMAL(10, 2) PATH '$.prc',
-                    prid INT PATH '$.prid'
-                )
-            ) AS json_data
-        WHERE
-            ${prCondition} ${dateCondition} ${finalWhere} 
-        ORDER BY orderman.oorders.createdAt DESC;`;
+          const query = 
+          
+          `SELECT SUM(subTotal) AS total_prc
+          FROM oorders
+          WHERE
+          ${catCondition} ${prCondition} ${dateCondition} ${finalWhere};`
+          
+        //   `SELECT
+        //     SUM(subTotal) AS total_prc
+        // FROM
+        //     orderman.oorders,
+        //     JSON_TABLE(
+        //         orderman.oorders.productDetails,
+        //         '$[*]'
+        //         COLUMNS (
+        //             prc DECIMAL(10, 2) PATH '$.prc',
+        //             prid INT PATH '$.prid',
+        //             prcat INT PATH '$.prcat'
+        //         )
+        //     ) AS json_data
+        // WHERE
+        // ${catCondition} ${prCondition} ${dateCondition} ${finalWhere} 
+        // ORDER BY orderman.oorders.createdAt DESC;`;
 
           // Execute the query
           const [results] = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
-      console.log("llllllllllllllllllllllll", results)
           // Access the sum of 'prc' values
           const totalPrc = results.total_prc;
           res.send(results);
 
         } catch (error) {
-          console.error('Error:', error);
           res.send(error);
         } 
 };
@@ -1805,6 +1741,108 @@ exports.multipleSearchDashProd = async (req, res) => {
 
     const id = req.query.id;
     const prid = req.query.prid;
+    const categoryId = req.query.categoryId;
+
+    var condition = {
+        cusName: {
+            [Op.like]: `%${cusName}%`
+        },
+        cusPhone: {
+            [Op.like]: `%${cusPhone}%`
+        },
+        supplierName: {
+            [Op.like]: `%${supplierName}%`
+        },
+        status:{
+            [Op.like]: `%${status}%`
+        },
+        trackingNumber: {
+            [Op.like]: `%${trackingNumber}%`
+        },
+        id: {
+            [Op.like]: `%${id}%`
+        }
+    };
+
+    let dateCondition = categoryId || prid ? `And orderman.oorders.createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
+    let prCondition = prid ? `json_data.prid = ${prid}` : '';
+    let catCondition = prid && categoryId ? '' : !prid && categoryId ? `json_data.prcat = ${categoryId}` : '';
+
+    for (const key in condition) {
+        if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
+            delete condition[key];
+        }
+    }
+
+   // Build the WHERE clause dynamically
+   const sqlConditions = [];
+
+   for (const key in condition) {
+     if (condition[key]) {
+       const value = condition[key][Op.like];
+       sqlConditions.push(`${key} LIKE '${value}'`);
+     }
+   }
+   
+   // Join the conditions with 'AND' to build the SQL WHERE clause
+   const whereClause = sqlConditions.join(' AND ');
+   let finalWhere = ''
+   if(sqlConditions.length > 0){
+    finalWhere = `AND ${whereClause}`
+   } else {
+    finalWhere = whereClause
+   }
+
+    
+    let dataArr2 = {}
+
+        try {
+          // Define your SQL query
+          const query = `SELECT
+            SUM(json_data.prc) AS total_prc
+        FROM
+            orderman.oorders,
+            JSON_TABLE(
+                orderman.oorders.productDetails,
+                '$[*]'
+                COLUMNS (
+                    prc DECIMAL(10, 2) PATH '$.prc',
+                    prid INT PATH '$.prid',
+                    prcat INT PATH '$.prcat'
+                )
+            ) AS json_data
+        WHERE
+        ${catCondition} ${prCondition} ${dateCondition} ${finalWhere} 
+        ORDER BY orderman.oorders.createdAt DESC;`;
+
+          // Execute the query
+          const [results] = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
+      
+          // Access the sum of 'prc' values
+          const totalPrc = results.total_prc;
+          res.send(totalPrc);
+
+        } catch (error) {
+          res.send(error);
+        } 
+};
+
+exports.multipleSearchDashProdStatus = async (req, res) => {
+
+    const customerId = req.query.customerId;
+    const cusName = req.query.customerName;
+    const cusPhone = req.query.customerPhone;
+    const supplierName = req.query.supplier;
+    const status = req.query.status;
+    const trackingNumber = req.query.trackingNo;
+    const createdAt = req.query.createdAt;
+    const endDate = req.query.endDate;
+    
+    const d1 = `${createdAt}T00:00:00.000Z`;
+    const d2 = `${endDate}T00:00:00.000Z`;
+
+    const id = req.query.id;
+    const prid = req.query.prid;
 
     var condition = {
         cusName: {
@@ -1855,15 +1893,13 @@ exports.multipleSearchDashProd = async (req, res) => {
     finalWhere = whereClause
    }
 
-    console.log("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",whereClause, d1, d2);
     
-    console.log("######################################################", condition)
     let dataArr2 = {}
 
         try {
           // Define your SQL query
           const query = `SELECT
-            SUM(json_data.prc) AS total_prc
+          oorders.status as status, SUM(json_data.prc) AS total_prc
         FROM
             orderman.oorders,
             JSON_TABLE(
@@ -1876,17 +1912,13 @@ exports.multipleSearchDashProd = async (req, res) => {
             ) AS json_data
         WHERE
             ${prCondition} ${dateCondition} ${finalWhere} 
-        ORDER BY orderman.oorders.createdAt DESC;`;
+            GROUP BY oorders.status;`;
 
           // Execute the query
-          const [results] = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
-      
-          // Access the sum of 'prc' values
-          const totalPrc = results.total_prc;
-          res.send(totalPrc);
+          const results = await Orderr.sequelize.query(query, { type: Orderr.sequelize.QueryTypes.SELECT })
+          res.send(results);
 
         } catch (error) {
-          console.error('Error:', error);
           res.send(error);
         } 
 };
@@ -1907,7 +1939,7 @@ exports.multipleSearchOrderCount = async (req, res) => {
 
     const id = req.query.id;
     const prid = req.query.prid;
-
+    const categoryId = req.query.categoryId;
 
     var condition = {
         cusName: {
@@ -1930,8 +1962,9 @@ exports.multipleSearchOrderCount = async (req, res) => {
         }
     };
 
-    let dateCondition = prid ? `AND createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
+    let dateCondition = categoryId || prid ? `And orderman.oorders.createdAt BETWEEN '${d1}' AND '${d2}'` : `createdAt BETWEEN '${d1}' AND '${d2}'`;
     let prCondition = prid ? `json_data.prid = ${prid}` : '';
+    let catCondition = prid && categoryId ? '' : !prid && categoryId ? `json_data.prcat = ${categoryId}` : '';
 
     for (const key in condition) {
         if (condition[key] && condition[key][Op.like] && condition[key][Op.like].includes('%%')) {
@@ -1965,7 +1998,7 @@ exports.multipleSearchOrderCount = async (req, res) => {
           // Define your SQL query
           const query = `
           SELECT
-            count(orderman.oorders.id) as Count
+            count(distinct orderman.oorders.id) as Count
         FROM
             orderman.oorders,
             JSON_TABLE(
@@ -1973,11 +2006,12 @@ exports.multipleSearchOrderCount = async (req, res) => {
                 '$[*]'
                 COLUMNS (
                     prc DECIMAL(10, 2) PATH '$.prc',
-                    prid INT PATH '$.prid'
+                    prid INT PATH '$.prid',
+                    prcat INT PATH '$.prcat'
                 )
             ) AS json_data
         WHERE
-            ${prCondition} ${dateCondition} ${finalWhere} 
+            ${catCondition} ${prCondition} ${dateCondition} ${finalWhere} 
         ORDER BY orderman.oorders.createdAt DESC;`;
 
 
@@ -1988,12 +2022,12 @@ exports.multipleSearchOrderCount = async (req, res) => {
           res.send(results);
 
         } catch (error) {
-          console.error('Error:', error);
           res.send(error);
         } 
 };
 
 exports.findAllBySupplier = (req, res) => {
+
 
     const supplierId = req.params.id;
     var condition = supplierId ? {
@@ -2007,9 +2041,7 @@ exports.findAllBySupplier = (req, res) => {
                 for (let index = 0; index < data.length; index++) {
                     const element = data[index];
                     element.dataValues.productData = []
-                        // console.log("666666666666666666666666666", element._previousDataValues.productDetails.length)
                     for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
-                        console.log("****************************", element._previousDataValues.productDetails[j])
                         await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
 
                             dt && dt.dataValues && element.dataValues.productData.push({
@@ -2047,12 +2079,15 @@ exports.findAllBySupplier = (req, res) => {
                     })
                 }
             }
-            await addData();
-            res.send(data);
+            // await addData();
+            // res.send(data);
         })
         .catch(err => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving orders."
             });
         });
+};
+
+exports.findAllBySupplier2 = (req, res) => {
 };

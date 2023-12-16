@@ -87,7 +87,6 @@ exports.create = (req, res) => {
                         }
                     })
                 }
-                console.log("datadatadata", data)
                 res.send(data);
             }
         })
@@ -128,7 +127,6 @@ exports.findAll = (req, res) => {
                         element.dataValues.cdescription = dt.dataValues.description
                     })
                     await Users.findByPk(element.dataValues.userId).then(dt => {
-                        console.log(dt.dataValues)
                         element.dataValues.ufullName = dt.dataValues.fullName,
                             element.dataValues.uemail = dt.dataValues.email,
                             element.dataValues.urole = dt.dataValues.role,
@@ -173,7 +171,6 @@ exports.findOne = (req, res) => {
                 //     data.dataValues.cdescription = dt.dataValues.description
                 // })
                 // await Users.findByPk(data.dataValues.userId).then(dt => {
-                //     console.log(dt.dataValues)
                 //     data.dataValues.ufullName = dt.dataValues.fullName,
                 //         data.dataValues.uemail = dt.dataValues.email,
                 //         data.dataValues.urole = dt.dataValues.role,
@@ -267,7 +264,6 @@ exports.update = (req, res) => {
 exports.delete = (req, res) => {
     const id = req.params.id;
     const type = req.params.type;
-    console.log(req.params.type)
     Stock.destroy({
             where: { id: id }
         })

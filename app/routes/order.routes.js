@@ -11,6 +11,8 @@ module.exports = app => {
 
     router.get("/findAllBySupplier/:id", orders.findAllBySupplier);
 
+    router.get("/findAllBySupplier2/:id", orders.findAllBySupplier2);
+
     router.get("/multipleSearch/:limit/:offset", orders.multipleSearch);
 
     router.get("/multipleSearchC", orders.multipleSearchC);
@@ -20,6 +22,8 @@ module.exports = app => {
     router.get("/multipleSearchDash", orders.multipleSearchDash);
 
     router.get("/multipleSearchDashProd", orders.multipleSearchDashProd);
+    
+    router.get("/multipleSearchDashProdStatus", orders.multipleSearchDashProdStatus);
 
     router.get("/multipleSearchOrderCount", orders.multipleSearchOrderCount);
 

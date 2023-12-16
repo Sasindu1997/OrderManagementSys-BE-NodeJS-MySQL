@@ -9,7 +9,7 @@ exports.login = async(req, res) => {
     // Validate request
     let obj = {
             username: "madusankarandeni617@gmail.com",
-            password: "Randeni@222526"
+            password: "Randeni@123123"
         }
         // Save Users in the database
     const data = await axios.post("https://bsms.hutch.lk/api/login", obj, {
@@ -18,7 +18,6 @@ exports.login = async(req, res) => {
             'X-API-VERSION': 'v1'
         }
     });
-    console.log(data)
     return data
 };
 
@@ -38,11 +37,9 @@ exports.sendSMS = async(mask, phoneNumbers, smsbody, res) => {
             'Authorization': `Bearer ${store.get('sms').accessToken}`
         }
     }).then(data => {
-        console.log(data)
         return data.data
     })
     .catch(err => {
-        console.log(err)
     });
 };
 

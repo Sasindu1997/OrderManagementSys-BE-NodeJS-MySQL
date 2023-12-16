@@ -45,16 +45,15 @@ exports.findAll = (req, res) => {
 
     Income.findAll({ where: condition, order: Income.sequelize.literal('id DESC') })
         .then(async data => {
-            async function addData() {
-                for (let index = 0; index < data.length; index++) {
-                    const element = data[index];
-                        await IncomeStream.findByPk(element.dataValues.name).then(dt => {
-                            console.log("data", dt.dataValues.name);
-                            dt && dt.dataValues ? element.dataValues.incomeStream = dt.dataValues.name : element.dataValues.incomeStream = ''
-                        })
-                }
-            }
-            await addData();
+            // async function addData() {
+            //     for (let index = 0; index < data.length; index++) {
+            //         const element = data[index];
+            //             await IncomeStream.findByPk(element.dataValues.name).then(dt => {
+            //                 dt && dt.dataValues ? element.dataValues.incomeStream = dt.dataValues.name : element.dataValues.incomeStream = ''
+            //             })
+            //     }
+            // }
+            // await addData();
             res.send(data);
         })
         .catch(err => {
@@ -199,8 +198,6 @@ exports.multipleSearch = (req, res) => {
         async function addData() {
             for (let index = 0; index < data.length; index++) {
                 const element = data[index];
-                console.log("data", element);
-
                     await IncomeStream.findByPk(element.name).then(dt => {
                         dt && dt.dataValues ? element.incomeStream = dt.dataValues.name : element.incomeStream = ''
                     })

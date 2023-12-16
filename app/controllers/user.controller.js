@@ -1,6 +1,7 @@
 const db = require("../models");
 const Users = db.users;
 const Op = db.Sequelize.Op;
+const Orderr = db.oorders;
 
 // Create and Save a new Users
 exports.create = (req, res) => {
@@ -58,7 +59,6 @@ exports.findAll = (req, res) => {
 };
 
 exports.findAllManagers = (req, res) => {
-    console.log(req.params.role)
     const role = req.params.role;
     var condition = role ? {
         role: {
@@ -193,6 +193,69 @@ exports.findAllByRole = (req, res) => {
         .catch(err => {
             res.status(500).send({
                 message: err.message || "Some error occurred while retrieving userss."
+            });
+        });
+};
+
+exports.findAllBySupplier = (req, res) => {
+
+
+    const supplierId = req.params.id;
+    var condition = supplierId ? {
+        supplierId: `${supplierId}`
+    } : null;
+
+    Orderr.findAll({ where: condition, order: Orderr.sequelize.literal('id DESC') })
+        .then(async data => {
+
+            async function addData() {
+                for (let index = 0; index < data.length; index++) {
+                    const element = data[index];
+                    element.dataValues.productData = []
+                    for (let j = 0; j < element._previousDataValues.productDetails.length; j++) {
+                        await Products.findByPk(element._previousDataValues.productDetails[j].prid).then(dt => {
+
+                            dt && dt.dataValues && element.dataValues.productData.push({
+                                pId: element._previousDataValues.productDetails[j].prid,
+                                pName: dt.dataValues.productName,
+                                pCode: dt.dataValues.productCode,
+                                pdescription: dt.dataValues.description,
+                                pprice: dt.dataValues.price,
+                                pcategoryId: dt.dataValues.categoryId,
+                                psubCategoryId: dt.dataValues.subCategoryId,
+                                pbrand: dt.dataValues.brand,
+                                pvolume: dt.dataValues.volume,
+                                ptype: dt.dataValues.type,
+                                ocount: element._previousDataValues.productDetails[j].prc,
+
+                            })
+                        })
+                    }
+
+                    element && element.dataValues && await Customers.findByPk(element.dataValues.customerId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.cfullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.cemail = dt.dataValues.email : element.dataValues.cemail = '',
+                            dt && dt.dataValues ? element.dataValues.cphone = dt.dataValues.phone : element.dataValues.cphone = '',
+                            dt && dt.dataValues ? element.dataValues.caddress = dt.dataValues.address : element.dataValues.caddress = '',
+                            dt && dt.dataValues ? element.dataValues.cdistrict = dt.dataValues.district : element.dataValues.cdistrict = '',
+                            dt && dt.dataValues ? element.dataValues.ccfullName = dt.dataValues.fullName : element.dataValues.ccfullName = ''
+
+                    })
+                    element && element.dataValues && await Users.findByPk(element.dataValues.userId).then(dt => {
+                        dt && dt.dataValues ? element.dataValues.ufullName = dt.dataValues.fullName : element.dataValues.cfullName = '',
+                            dt && dt.dataValues ? element.dataValues.uemail = dt.dataValues.email : element.dataValues.uemail = '',
+                            dt && dt.dataValues ? element.dataValues.urole = dt.dataValues.role : element.dataValues.urole = '',
+                            dt && dt.dataValues ? element.dataValues.uphoneNumber = dt.dataValues.phoneNumber : element.dataValues.uphoneNumber = '',
+                            dt && dt.dataValues ? element.dataValues.uaddress = dt.dataValues.address : element.dataValues.uaddress = ''
+                    })
+                }
+            }
+            // await addData();
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || "Some error occurred while retrieving orders."
             });
         });
 };

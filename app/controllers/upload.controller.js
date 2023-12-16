@@ -20,10 +20,7 @@ function setCharAt(str, index, chr) {
 }
 
 const uploadInit = async(req, res) => {
-    console.log("#############", req.file,
-        req.body.isDeliveryAdded,
-        req.body.userId,
-        req.body.deliveryId);
+
 
     let deliveryData = {};
 
@@ -39,9 +36,7 @@ const uploadInit = async(req, res) => {
             return res.status(400).send("Please upload a CSV file!");
         }
 
-        console.log("***************************************************")
 
-        console.log("__basedir", __basedir)
         let path = __basedir + "/resources/static/assets/uploads/" + req.file.filename;
         let prevOrderArray = [];
         let customerPhnArray = [];
@@ -55,7 +50,6 @@ const uploadInit = async(req, res) => {
                 throw error.message;
             })
             .on("data", async(row) => {
-                console.log(row)
 
                 // 1.0
                 //check multiple phone numbers
@@ -68,16 +62,13 @@ const uploadInit = async(req, res) => {
                     customerPhnArray.push(customerPhone);
                 }
 
-                console.log(customerPhnArray)
                     // 2.0
                     //Check previous customers
                 await customerPhnArray.map(async(number) => {
-                    console.log("customerPhone", number)
                     if (number.charAt(0) == '0') {
                         let newNO = '';
                         newNO = setCharAt(number, 0, '94')
                         customerNewPhnArray.push(newNO);
-                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
 
                         const send = async(value) => {
                                 value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
@@ -87,7 +78,6 @@ const uploadInit = async(req, res) => {
                                 const showPrevOrders = async() => {
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -99,12 +89,10 @@ const uploadInit = async(req, res) => {
                             }
                             // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     } else if (number.charAt(0) == '9') {
                         let newNO = '';
                         newNO = number
                         customerNewPhnArray.push(newNO);
-                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
 
                         const send = async(value) => {
                                 value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
@@ -112,11 +100,9 @@ const uploadInit = async(req, res) => {
                                 // 3.0
                                 //show previous orders
                                 const showPrevOrders = async() => {
-                                    console.log("ppppppppppppppppppppppppppppppppp", duplicatePhnArray)
 
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -128,12 +114,10 @@ const uploadInit = async(req, res) => {
                             }
                             // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     } else if (number.charAt(0) == '7') {
                         let newNO = '';
                         newNO = setCharAt(number, 0, '947')
                         customerNewPhnArray.push(newNO);
-                        console.log("xxxxxxxxxxxxxxxxxxxxxxxx", newNO);
 
                         const send = async(value) => {
                                 value.length > 0 ? duplicatePhnArray.push(value) && duplicatePhnNoArray.push(newNO) : '';
@@ -143,7 +127,6 @@ const uploadInit = async(req, res) => {
                                 const showPrevOrders = async() => {
                                     if (duplicatePhnArray.length > 0) {
                                         const send2 = async(value) => {
-                                            // console.log("Check previous orders", value);
                                             return value.length > 0 ? prevOrderArray.push({ phone: newNO, orders: value }) : '';
                                         }
 
@@ -157,11 +140,9 @@ const uploadInit = async(req, res) => {
                         let res = await customers.findByMobileNo(newNO, send);
                     }
                 })
-                console.log("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv", prevOrderArray)
 
             })
             .on("end", async() => {
-                console.log("Eeeeeeeeeeeeeennnnnnnnndddddd", prevOrderArray);
                 setTimeout(function() {
                     return res.status(200).send({
                         message: "Uploaded the file successfully: " + req.file.originalname,
@@ -183,7 +164,6 @@ const uploadInit = async(req, res) => {
                 //     });
             })
     } catch (error) {
-        console.log(error);
         res.status(500).send({
             message: "Could not upload the file: " + req.file.originalname,
         });
@@ -191,10 +171,6 @@ const uploadInit = async(req, res) => {
 };
 
 const upload = async(req, res) => {
-    console.log("#############", req.file,
-        req.body.isDeliveryAdded,
-        req.body.userId,
-        req.body.deliveryId);
 
     let deliveryData = {};
 
@@ -211,9 +187,7 @@ const upload = async(req, res) => {
         }
 
         let tutorials = [];
-        console.log("***************************************************")
 
-        console.log("__basedir", __basedir)
         let path = __basedir + "/resources/static/assets/uploads/" + req.file.filename;
 
         fs.createReadStream(path)
@@ -222,7 +196,6 @@ const upload = async(req, res) => {
                 throw error.message;
             })
             .on("data", async(row) => {
-                console.log(row)
 
                 let customerPhnArray = [];
                 let customerNewPhnArray = [];
@@ -253,7 +226,6 @@ const upload = async(req, res) => {
                         customerNewPhnArray.push(newNO);
 
                         const send = async(value) => {
-                            console.log("value", value);
                             value.length > 0 ? duplicatePhnArray.push(value) : '';
                             value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
 
@@ -261,14 +233,12 @@ const upload = async(req, res) => {
 
                         // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     } else if (customerPhnArray[i].charAt(0) == '9') {
                         let newNO = '';
                         newNO = customerPhnArray[i]
                         customerNewPhnArray.push(newNO);
 
                         const send = async(value) => {
-                            console.log("value", value);
                             value.length > 0 ? duplicatePhnArray.push(value) : '';
                             value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
 
@@ -276,14 +246,12 @@ const upload = async(req, res) => {
 
                         // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     } else if (customerPhnArray[i].charAt(0) == '7') {
                         let newNO = '';
                         newNO = setCharAt(customerPhnArray[i], 0, '947')
                         customerNewPhnArray.push(newNO);
 
                         const send = async(value) => {
-                            console.log("value", value);
                             value.length > 0 ? duplicatePhnArray.push(value) : '';
                             value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
 
@@ -291,7 +259,6 @@ const upload = async(req, res) => {
 
                         // 9488656396
                         let res = await customers.findByMobileNo(newNO, send);
-                        console.log("res", res)
                     }
                 }
                 // let resdupcheck = await customerPhnArray.map(async(number) => {
@@ -301,7 +268,6 @@ const upload = async(req, res) => {
                 //         customerNewPhnArray.push(newNO);
 
                 //         const send = async(value) => {
-                //             console.log("value", value);
                 //             value.length > 0 ? duplicatePhnArray.push(value) : '';
                 //             value.length > 0 ? duplicatePhnNumbersArray.push(newNO) : '';
                 //             return;
@@ -310,18 +276,15 @@ const upload = async(req, res) => {
 
                 //         // 9488656396
                 //         let res = await customers.findByMobileNo(newNO, send);
-                //         console.log("res", res)
 
                 //         // return duplicatePhnNumbersArray;
                 //     }
                 // })
 
                 setTimeout(async function() {
-                    console.log("item", duplicatePhnNumbersArray);
                     if (duplicatePhnNumbersArray.length > 0) {
                         // for(i = 0; i < duplicatePhnNumbersArray.length; i++ ){
                         const sendResFrmCusphone = async(value) => {
-                            console.log("sendResFrmCusphone", value)
                             CUSID = value.length > 0 && value[0].dataValues && value[0].dataValues.id;
 
                             //caling check PRODUCTS
@@ -355,7 +318,6 @@ const upload = async(req, res) => {
                         }
                         const sendResFrmCus = async(value) => {
                             CUSID = value.dataValues.id;
-                            console.log("newcustomer", value, CUSID)
 
                             //caling check PRODUCTS
                             CUSID && checkProducts();
@@ -382,7 +344,6 @@ const upload = async(req, res) => {
                         productsArraywithoutCount = prstring.split("-");
 
                         productsArraywithoutWeight = productsArraywithoutCount[0].split(":");
-                        console.log("productsArraywithoutCount", productsArraywithoutCount[0])
 
                         totalItemCount = totalItemCount + parseInt(productsArraywithoutCount[0]),
 
@@ -397,15 +358,12 @@ const upload = async(req, res) => {
                                     return ``.repeat(match.length)
                                 }),
                             }
-                        console.log("productObj", productObj);
 
                         productArray.push(productObj);
-                        console.log("productArray.length", productArray.length);
 
                         if (productArray.length > 0) {
                             for (i = 0; i < productArray.length; i++) {
                                 const sendResFrmProName = async(value) => {
-                                    console.log("sendResFrmProName", value[0].dataValues)
                                     value.length > 0 && value[0].dataValues.id ? productIdArrayFinal.push({
                                         prid: value[0].dataValues.id,
                                         prc: productObj.prcount,
@@ -414,16 +372,13 @@ const upload = async(req, res) => {
                                     productObj.id = value.length > 0 &&
                                         value[0].dataValues.id;
                                 };
-                                console.log("b4 rescheck", productObj, productObj.prname)
 
                                 let resCus = await product.findAllByNameByBE(productObj.prname, sendResFrmProName);
-                                console.log("rescheck", resCus, productIdArrayFinal)
                             }
                         }
                     })
                 }
                 setTimeout(async function() {
-                    console.log("productIdArrayFinal", productIdArrayFinal);
                     if (productIdArrayFinal.length > 0) { addNewOrder() };
                 }, 5000);
 
@@ -431,9 +386,7 @@ const upload = async(req, res) => {
                 // //Add new Order
                 const addNewOrder = async() => {
                     const sendResFrmOrder = async(value) => {
-                        console.log("sendResFrmOrder", value);
                         const sendResFrmupdate = async(value) => {
-                            console.log("sendResFrmupdate", value);
                         };
                         productIdArrayFinal.map(async pr => {
                             await order.updateStocks(pr.prid, pr.prc, '', sendResFrmupdate);
@@ -466,7 +419,6 @@ const upload = async(req, res) => {
                         isActive: true,
                     }
                     let resOrder = await order.createByBE(objOrder, sendResFrmOrder);
-                    console.log("obj", objOrder)
 
                     // 7.0 
                     // Send SMS
@@ -482,7 +434,6 @@ const upload = async(req, res) => {
                     // 9.0
                     //Send to Delivery
                     // const sendResFrmsendToDelivery = async(value) => {
-                    //     console.log("sendResFrmOrder", value);
                     // };
                     // deliveryData.clientId && deliveryData.apiKey && sendToDelivery({
                     //     "client_id": deliveryData.clientId,
@@ -502,8 +453,6 @@ const upload = async(req, res) => {
             })
             .on("end", (err) => {
                 setTimeout(async function() {
-                    console.log(err)
-                    console.log("Eeeeeeeeeeeeeenddddddddddd2222", err)
 
                     if (err) {
                         res.send("success");
@@ -515,7 +464,6 @@ const upload = async(req, res) => {
                 }, 3000);
             });
     } catch (error) {
-        console.log(error);
         res.status(500).send({
             message: "Could not upload the file: " + req.file.originalname,
         });
@@ -547,11 +495,9 @@ const sendToDelivery = async () => {
     
     await axios.request(config)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
       return response.data;
     })
     .catch((error) => {
-      console.log(error);a
       return error;
     });
     
@@ -599,16 +545,13 @@ const sendToDelivery2 = () => {
         })
         .then(function(response) {
             //handle success
-            console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", response);
         })
         .catch(function(response) {
             //handle error
-            console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", response);
         });
 }
 
 const sendToDelivery1 = (req, res) => {
-    console.log("sendToDelivery", req)
     const apiPath = 'https://fardardomestic.com/api/p_request_v1.02.phps';
     const options = {
         url: 'https://fardardomestic.com/api/p_request_v1.02.php',
@@ -649,15 +592,11 @@ const sendToDelivery1 = (req, res) => {
 
     axios(options)
         .then(response => {
-            console.log("eeeeeeeeeeeeeeeeeeeeeeeee", response);
         }).catch(error => {
-            console.log(error);
         });
 };
 
 const getTutorials = (req, res) => {
-    console.log("111111111111111S")
-    console.log("__basedir", __basedir)
 
     Tutorial.findAll()
         .then((data) => {
@@ -694,7 +633,6 @@ module.exports = {
 //                         newNO = setCharAt(number, 0, '94')
 //                         customerNewPhnArray.push(newNO);
 
-//                         console.log("res", res)
 
 
 //                     }
@@ -704,5 +642,4 @@ module.exports = {
 //                 }
 
 
-//                 console.log(row['Recipient Mobile'], customerNewPhnArray)
 //                 tutorials.push(row);

@@ -81,12 +81,11 @@ exports.findAll = (req, res) => {
 
 //by categoryId
 exports.findAllByCategoryId = (req, res) => {
-    console.log(req)
 
     const categoryId = req.params.id;
     var condition = categoryId ? {
         categoryId: {
-            [Op.like]: `%${categoryId}%`
+            [Op.eq]: categoryId
         }
     } : null;
 
@@ -139,14 +138,11 @@ exports.findOne = (req, res) => {
     Product.findByPk(id)
         .then(async data => {
             if (data) {
-                console.log(data.dataValues)
                 await Categories.findByPk(data.dataValues.categoryId).then(dt => {
-                    console.log("dtq", data.dataValues);
 
                     dt ? data.dataValues.categoryTitle = dt.dataValues.title : data.dataValues.categoryTitle = ""
                 })
                 await SubCategories.findByPk(data.dataValues.subCategoryId).then(dt => {
-                    console.log("dt2", data.dataValues);
 
                     dt ? data.dataValues.subCategoryTitle = dt.dataValues.title : data.dataValues.subCategoryTitle = ""
                 })
